@@ -23,6 +23,14 @@
         "tell",
         "say"
       ],
+      "current": false
+    },
+    {
+      "prompt": "Tell me {tell} and say {say} this is for abhinav ",
+      "variables": [
+        "tell",
+        "say"
+      ],
       "current": true
     }
   ]
