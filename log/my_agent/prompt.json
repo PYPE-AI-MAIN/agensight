@@ -1,0 +1,7 @@
+{
+  "agent": "my_agent",
+  "prompt": "Tell me a joke. {tell}",
+  "variables": [
+    "tell"
+  ]
+}
