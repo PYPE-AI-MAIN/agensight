@@ -1,79 +1,55 @@
-# agensight
+# Agensight
 
-**agensight** is an open-source Python SDK and CLI for prompt management, agent-based logging, and UI visualization of prompt/response interactions.  
-It is designed for developers building LLM-powered applications who want to track, organize, and explore their prompt engineering workflow.
-
----
+Agensight is a Python SDK and CLI tool that helps you log, track, and visualize your OpenAI agent interactions.  
+It is designed for developers building LLM-powered applications who want to keep a record of prompts, completions, and agent behavior for debugging, analytics, or demonstration.
 
 ## Features
 
-- **Agent-based prompt management**: Organize prompts and logs by agent.
-- **Prompt wrapping**: Standardize and track prompt templates.
-- **Logging**: Store prompt/response pairs for each agent.
-- **Web UI**: Visualize agents, prompts, and logs in your browser.
-- **CLI**: Launch the UI and manage your workflow from the terminal.
+- **Easy Logging:** Log every prompt and response from your agent with a single line of code.
+- **Web Dashboard:** Instantly view and explore your agent’s history in your browser.
+- **CLI Tool:** Launch the dashboard and manage your logs from the command line.
+- **Seamless Integration:** Works with OpenAI’s API and your own agent logic.
 
----
-
-## Installation
-
-```bash
-git clone https://github.com/yourusername/agensight.git
-cd agensight
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
-
----
-
-## Usage
-
-### 1. **SDK Example**
+## Example Usage
 
 ```python
+import openai
 from agensight.agent import Agent
 
-agent = Agent("my_agent")
-prompt = "Tell me a joke. {tell}"
-wrapped = agent.wrap_prompt(prompt)
+client = openai.OpenAI()  # Set your API key in env or pass it here
 
-# ...send wrapped prompt to OpenAI or another LLM...
+agent = Agent("new_agent")
 
-output = "Why did the chicken cross the road? To get to the other side!"
-agent.log_interaction(prompt.format(tell="john"), output)
+prompt_template = "Tell me {tell} and say {say}"
+values = {"tell": "hello", "say": "world"}
+
+result = agent.wrapper(prompt_template, values)
+
+response = openai.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[{"role": "user", "content": result}]
+)
+
+output = response.choices[0].message.content
+
+agent.log_interaction(result, output)
 ```
 
-### 2. **Start the Web UI**
+## Getting Started
 
-From your project root:
-```bash
-python -m cli.main view
-```
-Then open [http://localhost:5000](http://localhost:5000) in your browser.
+1. **Install:**
+   ```bash
+   pip install agensight
+   ```
 
----
+2. **Log interactions in your code** (see example above).
 
-
-## Development & Testing
-
-- Run tests from the project root:
-  ```bash
-  python -m test.test_agent
-  ```
-- Or with pytest:
-  ```bash
-  pytest
-  ```
-
----
-
-## Contributing
-
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
-
----
+3. **View your project:**
+   ```bash
+   agensight view
+   ```
+   This will open a web dashboard to explore your agent’s activity.
 
 ## License
 
-[MIT](LICENSE)
+MIT

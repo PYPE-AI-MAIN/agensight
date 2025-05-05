@@ -1,11 +1,9 @@
 from flask import Flask, jsonify, send_from_directory,request
 import os
 import json
-from utils._agentUtils import add_new_prompt
+from agensight.utils.agentUtils import add_new_prompt
 
-
-
-app = Flask(__name__, static_folder="../frontend")
+app = Flask(__name__, static_folder="./frontend")
 LOG_ROOT = os.path.join(os.getcwd(), "log")
 
 @app.route("/agents")

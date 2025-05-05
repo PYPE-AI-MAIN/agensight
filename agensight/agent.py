@@ -7,7 +7,7 @@ import datetime
 
 class Agent:
     def __init__(self, name: str):
-        self.name = name
+        self.name= name
         self.log_dir = os.path.join(os.getcwd(), "log", self.name)
         os.makedirs(self.log_dir, exist_ok=True)
         self.log_file = os.path.join(self.log_dir, "agent.log")
