@@ -5,3 +5,10 @@ th, td { border: 1px solid #ccc; padding: 0.5em; }
 th { background: #f0f0f0; }
 pre { background: #f9f9f9; padding: 1em; border-radius: 5px; }
 #prompt-json { color: #0074d9; }
+
+.log-table-scroll {
+    max-height: 300px;   /* Adjust height as needed */
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+  }

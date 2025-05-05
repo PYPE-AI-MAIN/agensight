@@ -1,7 +1,29 @@
 {
   "agent": "my_agent",
-  "prompt": "Tell me a joke. {tell}",
-  "variables": [
-    "tell"
+  "prompts": [
+    {
+      "prompt": "Tell me {tell} and say {say}",
+      "variables": [
+        "tell",
+        "say"
+      ],
+      "current": false
+    },
+    {
+      "prompt": "Tell me {tell} and say {say} deepesh",
+      "variables": [
+        "tell",
+        "say"
+      ],
+      "current": false
+    },
+    {
+      "prompt": "you are great story teller {tell} {say}",
+      "variables": [
+        "tell",
+        "say"
+      ],
+      "current": true
+    }
   ]
 }
