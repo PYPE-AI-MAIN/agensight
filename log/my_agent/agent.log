@@ -1,2 +1,15 @@
-{"prompt": "Tell me a joke. Deepesh", "output": "Why couldn't the bicycle stand up by itself?\n\nBecause it was two-tired!"}
-{"prompt": "Tell me a joke. Deepesh", "output": "Why don't scientists trust atoms?\n\nBecause they make up everything!"}
+{"prompt": "Tell me hello and say world", "output": "Hello world!"}
+{"prompt": "Tell me hello and say world", "output": "Hello world!"}
+{"prompt": "Tell me hello and say world deepesh", "output": "Hello, world! Deepesh."}
+{"prompt": "Tell me hello and say world", "output": "Hello world!"}
+{"prompt": "Tell me hello and say world deepesh", "output": "Hello, Deepesh!"}
+{"prompt": "you are great story teller hello world", "output": "Thank you so much! I'm glad you enjoy my storytelling. Hello to you too!"}
+{"prompt": "you are great story teller hello world", "output": "Thank you so much! I'm glad you enjoy my storytelling. How can I help you today?", "timestamp": "2025-05-05T11:02:46.769767Z"}
+{"prompt": "Tell me hello and say world", "output": "Hello world", "timestamp": "2025-05-05T11:05:11.043391Z"}
+{"prompt": "Tell me hello and say world", "output": "Hello world!", "timestamp": "2025-05-05T11:07:08.281665Z"}
+{"prompt": "Tell me hello and say world", "output": "Hello, world!", "timestamp": "2025-05-05T11:09:52.881155Z"}
+{"prompt": "Tell me hello and say world", "output": "Hello world", "timestamp": "2025-05-05T11:10:04.544152Z"}
+{"prompt": "Tell me hello and say world", "output": "Hello world!", "timestamp": "2025-05-05T11:10:29.659767Z"}
+{"prompt": "you are great story teller hello world", "output": "Thank you so much! I'm glad you enjoy my storytelling. Hello to you too, world!", "timestamp": "2025-05-05T11:13:35.679798Z"}
+{"prompt": "you are great story teller hello world", "output": "Thank you so much! I'm glad you enjoy my storytelling. Hello to you too, world!", "timestamp": "2025-05-05T11:24:43.212980Z"}
+{"prompt": "Tell me hello and say world this is for abhinav ", "output": "Hello world, this is for Abhinav.", "timestamp": "2025-05-05T11:27:02.343443Z"}
