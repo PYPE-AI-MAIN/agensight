@@ -1,0 +1,21 @@
+{
+  "agent": "my_agent",
+  "prompts": [
+    {
+      "prompt": "Tell me {tell} and say {say}",
+      "variables": [
+        "tell",
+        "say"
+      ],
+      "current": false
+    },
+    {
+      "prompt": "Tell me {tell} and say {say} this is the changed prompt ",
+      "variables": [
+        "tell",
+        "say"
+      ],
+      "current": true
+    }
+  ]
+}

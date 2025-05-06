@@ -21,6 +21,30 @@ def agent_log(agent):
         lines = f.readlines()
     return jsonify([json.loads(line) for line in lines])
 
+
+@app.route('/api/openai', methods=['POST'])
+def openai_call():
+    data = request.json
+    user = data.get('user', 'default_user')
+    values = data.get('values', {})  # dict of variable values
+    prompt = data.get('prompt', '')
+
+    agent = Agent(user)
+    prompt = PROMPT_TEMPLATE.format(**values)
+
+    try:
+        response = openai.ChatCompletion.create(
+            model=data.get('model', 'gpt-3.5-turbo'),
+            messages=[{"role": "user", "content": prompt}],
+            temperature=data.get('temperature', 1.0)
+        )
+        output = response.choices[0].message.content
+        agent.log_interaction(prompt, output)
+        return jsonify({"output": output})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/prompt/<agent>", methods=["GET", "POST"])
 def agent_prompt(agent):
     prompt_file = os.path.join(LOG_ROOT, agent, "prompt.json")

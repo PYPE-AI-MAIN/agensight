@@ -1,5 +1,5 @@
 import openai
-from agensight.agent import Agent
+from agensight.main import Agent
 
 
 client = openai.OpenAI()  # Make sure to set your API key in env or pass it here
@@ -14,7 +14,7 @@ result = agent.wrapper(prompt_template, values)
 
 response = openai.chat.completions.create(
     model="gpt-3.5-turbo",
-    messages=[{"role": "user", "content": result}]
+    messages=[{"role": "system", "content": result}]
 )
 output = response.choices[0].message.content
 
