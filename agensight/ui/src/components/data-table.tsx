@@ -517,7 +517,7 @@ export function DataTable({
           </div>
           
           {/* Pagination footer - placed outside the content container */}
-          <div className="mt-auto border-t bg-muted/50 py-2 px-4">
+          <div className="mt-auto bg-muted/50 py-2 px-4">
             <div className="flex items-center justify-between">
               <div className="text-muted-foreground text-sm">
                 {table.getFilteredSelectedRowModel().rows.length} of{" "}

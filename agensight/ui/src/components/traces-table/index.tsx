@@ -167,7 +167,7 @@ export function TracesTable({
     >
       <TabsContent
         value="outline"
-        className="relative flex flex-col h-full overflow-hidden"
+        className="relative flex flex-col h-full"
       >
         <DndContext
           collisionDetection={closestCenter}
@@ -248,8 +248,8 @@ export function TracesTable({
             </div>
           </div>
           
-          {/* Pagination footer */}
-          <div className="mt-auto border-t bg-muted/50 py-2 px-4">
+          {/* Pagination footer - make it sticky at the bottom */}
+          <div className="bg-background py-2 px-4 flex-shrink-0 sticky bottom-0 z-10 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.25)]">
             <div className="flex items-center justify-between">
               <div className="text-muted-foreground text-base">
                 {table.getFilteredSelectedRowModel().rows.length} of{" "}

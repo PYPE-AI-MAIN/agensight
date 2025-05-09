@@ -50,55 +50,31 @@ interface GanttChartVisualizerProps {
   selectedSpanId?: string;
 }
 
-// Mock span data for testing until the API is fully implemented
-const mockSpans: Span[] = [
-  {
-    duration: 8.16,
-    end_time: 1746727872.69,
-    final_completion: "As of now, the weather in Bangalore is sunny with a temperature of 25°C.\n\nAs for the latest AI news, I can provide some general updates. Would you like to hear about any specific developments or advancements in the field of artificial intelligence?",
-    name: "Planner",
-    span_id: "8f4dfbea3ed048d3",
-    start_time: 1746727864.53,
-    tools_called: [
-      {
-        args: {
-          location: "Bangalore"
-        },
-        duration: 7.34,
-        name: "get_weather",
-        output: "{\"location\": \"Bangalore\"}",
-        span_id: "b8e52c49f98389b1"
-      },
-      {
-        args: {
-          topic: "AI"
-        },
-        duration: 7.34,
-        name: "get_news",
-        output: "{\"topic\": \"AI\"}",
-        span_id: "b8e52c49f98389b1"
+// Add a custom hook to prevent scroll propagation
+function usePreventScrollPropagation() {
+  useEffect(() => {
+    const preventPropagation = (e: WheelEvent) => {
+      const target = e.target as HTMLElement;
+      const scrollContainer = target.closest('.scroll-container');
+      
+      if (scrollContainer) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+        const isAtTop = scrollTop === 0;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+        
+        // Check if scroll is at the boundaries to decide if we should prevent propagation
+        if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
+          e.preventDefault();
+        }
+        
+        e.stopPropagation();
       }
-    ]
-  },
-  {
-    duration: 1.17,
-    end_time: 1746727873.86,
-    final_completion: "Schedule:\n\n10:00 am - 11:30 am: Outdoor yoga session at the park\n12:00 pm - 1:00 pm: Lunch at a rooftop restaurant\n2:00 pm - 4:00 pm: Visit the botanical gardens\n4:30 pm - 6:00 pm: Explore the local market\n7:00 pm - 8:00 pm: Dinner at an outdoor restaurant\n\nAs for the latest AI news, I can provide some general updates. Would you like to hear about any specific developments or advancements in the field of artificial intelligence?",
-    name: "Scheduler",
-    span_id: "f239d3d2a0c652e0",
-    start_time: 1746727872.69,
-    tools_called: []
-  },
-  {
-    duration: 3.09,
-    end_time: 1746727876.95,
-    final_completion: "Join us for a day of relaxation and exploration with our carefully curated schedule:\n\n10:00 am - 11:30 am: Start the day with an invigorating outdoor yoga session at the park to rejuvenate your mind and body.\n\n12:00 pm - 1:00 pm: Indulge in a delicious lunch at a rooftop restaurant with stunning views of the city.\n\n2:00 pm - 4:00 pm: Immerse yourself in the beauty of nature with a visit to the botanical gardens, where you can admire a diverse array of plants and flowers.\n\n4:30 pm - 6:00 pm: Discover the vibrant local culture at the bustling market, where you can browse through unique products and immerse yourself in the lively atmosphere.\n\n7:00 pm - 8:00 pm: End the day with a delightful dinner at an outdoor restaurant, enjoying the evening breeze and delectable cuisine.\n\nAs for the latest AI news, I can provide some general updates. Would you like to hear about any specific developments or advancements in the field of artificial intelligence?",
-    name: "Presenter",
-    span_id: "74a786be29319f04",
-    start_time: 1746727873.86,
-    tools_called: []
-  }
-];
+    };
+    
+    document.addEventListener('wheel', preventPropagation, { passive: false });
+    return () => document.removeEventListener('wheel', preventPropagation);
+  }, []);
+}
 
 function GanttChart({ spans, trace }: GanttChartProps) {
   const [selectedTool, setSelectedTool] = useState<ToolCall | null>(null);
@@ -202,20 +178,12 @@ function GanttChart({ spans, trace }: GanttChartProps) {
   const userSpans = spans.filter(span => span.name.toLowerCase().includes("user") || span.name.toLowerCase().includes("input"));
   const agentSpans = spans.filter(span => !userSpans.includes(span));
   
-  // Get unique tool types for the legend
-  const toolTypes = new Set<string>();
-  spans.forEach(span => {
-    span.tools_called.forEach(tool => {
-      toolTypes.add(tool.name);
-    });
-  });
-  
   return (
     <div className="flex flex-col">
       {/* Chart section */}
       <div className="mb-2">
         {/* Time axis */}
-        <div className="flex justify-between mb-2 text-xs text-muted-foreground sticky top-0 bg-background z-10 pb-1" suppressHydrationWarning>
+        <div className="flex justify-between mb-1 text-xs text-muted-foreground sticky top-0 bg-background z-10 pb-0.5" suppressHydrationWarning>
           {timelineData.timeMarks.map((mark, i) => (
             <div key={i} suppressHydrationWarning>{mark}</div>
           ))}
@@ -242,14 +210,14 @@ function GanttChart({ spans, trace }: GanttChartProps) {
                 return (
                   <div 
                     key={`user-${span.span_id}`} 
-                    className={`flex items-center ${isUserFocused ? 'bg-muted/30 -mx-4 px-4' : ''}`}
+                    className={`flex items-center ${isUserFocused ? 'bg-muted/30 -mx-4 px-4' : ''} mb-0.5`}
                     tabIndex={0}
                     onFocus={() => setFocusedSpanIndex(spans.indexOf(span))}
                   >
                     <div className="w-32 text-right pr-3 text-sm">user</div>
-                    <div className="flex-1 relative h-6">
+                    <div className="flex-1 relative h-5">
                       <div 
-                        className={`absolute h-full rounded-sm hover:h-8 hover:-top-1 transition-all duration-75 cursor-pointer ${isUserFocused ? 'ring-2 ring-primary' : ''}`}
+                        className={`absolute h-full rounded-sm hover:h-7 hover:-top-1 transition-all duration-75 cursor-pointer ${isUserFocused ? 'ring-2 ring-primary' : ''}`}
                         style={{
                           backgroundColor: timelineData.typeColors["User"] || timelineData.typeColors.default,
                           left: `${((span.start_time - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
@@ -269,64 +237,42 @@ function GanttChart({ spans, trace }: GanttChartProps) {
               })}
               
               {/* Rows for agent spans */}
-              {agentSpans.map((span, i) => {
-                const isAgentFocused = focusedSpanIndex === spans.indexOf(span);
-                return (
-                  <div 
-                    key={`agent-${span.span_id}`} 
-                    className={`flex items-center ${isAgentFocused ? 'bg-muted/30 -mx-4 px-4' : ''}`}
-                    tabIndex={0}
-                    onFocus={() => setFocusedSpanIndex(spans.indexOf(span))}
-                  >
-                    <div className="w-32 text-right pr-3 text-sm truncate">{span.name}</div>
-                    <div className="flex-1 relative h-6">
-                      {/* For each agent span */}
-                      <div 
-                        className={`absolute h-full rounded-sm hover:h-8 hover:-top-1 transition-all duration-75 cursor-pointer ${isAgentFocused ? 'ring-2 ring-primary' : ''}`}
-                        style={{
-                          backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors["Assistant"] || timelineData.typeColors.default,
-                          left: `${((span.start_time - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
-                          width: `${(span.duration / timelineData.totalDuration) * 100}%`,
-                          minWidth: "8px",
-                          zIndex: 10
-                        }}
-                        title={`${span.name}: ${span.duration.toFixed(2)}s`}
-                        onClick={() => {
-                          setSelectedGanttSpan(span);
-                          setSelectedTool(null);
-                        }}
-                      />
-                      
-                      {/* For each tool call within agent span - improving positioning and z-index to avoid overlap */}
-                      {span.tools_called.map((tool, toolIndex) => {
-                        // Calculate a better positioning for tools to avoid overlap
-                        const toolStart = span.start_time + (span.duration * toolIndex / Math.max(1, span.tools_called.length));
-                        const toolWidth = Math.min(tool.duration, span.duration / Math.max(1, span.tools_called.length) * 0.95);
-                        
-                        return (
-                          <div 
-                            key={`tool-${span.span_id}-${toolIndex}`}
-                            className={`absolute h-full rounded-sm hover:h-8 hover:-top-1 transition-all duration-75 cursor-pointer`}
-                            style={{
-                              backgroundColor: timelineData.typeColors[tool.name] || timelineData.typeColors.default,
-                              left: `${((toolStart - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
-                              width: `${(toolWidth / timelineData.totalDuration) * 100}%`,
-                              minWidth: "8px",
-                              zIndex: 20
-                            }}
-                            title={`Tool: ${tool.name} (${tool.duration.toFixed(2)}s)`}
-                            onClick={(e) => {
-                              e.stopPropagation(); // Stop event from bubbling up to span
-                              setSelectedTool(tool);
-                              setSelectedGanttSpan(null); // Clear span selection when tool is selected
-                            }}
-                          />
-                        );
-                      })}
+              <div className="mt-5 space-y-0">
+                {agentSpans.map((span, i) => {
+                  const isAgentFocused = focusedSpanIndex === spans.indexOf(span);
+                  
+                  return (
+                    <div 
+                      key={`agent-${span.span_id}`} 
+                      className={`flex items-center ${isAgentFocused ? 'bg-muted/30 -mx-4 px-4' : ''} h-5 my-0 py-0 mb-3 ${i < agentSpans.length - 1 ? 'border-b border-dotted border-muted-foreground/20 pb-3' : ''}`}
+                      tabIndex={0}
+                      onFocus={() => setFocusedSpanIndex(spans.indexOf(span))}
+                    >
+                      <div className="w-32 text-right pr-3 text-sm truncate">
+                        {span.name}
+                      </div>
+                      <div className="flex-1 relative h-5">
+                        {/* For each agent span */}
+                        <div 
+                          className={`absolute h-full rounded-sm hover:h-7 hover:-top-1 transition-all duration-75 cursor-pointer ${isAgentFocused ? 'ring-2 ring-primary' : ''}`}
+                          style={{
+                            backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors["Assistant"] || timelineData.typeColors.default,
+                            left: `${((span.start_time - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
+                            width: `${(span.duration / timelineData.totalDuration) * 100}%`,
+                            minWidth: "8px",
+                            zIndex: 10
+                          }}
+                          title={`${span.name}: ${span.duration.toFixed(2)}s`}
+                          onClick={() => {
+                            setSelectedGanttSpan(span);
+                            setSelectedTool(null);
+                          }}
+                        />
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
@@ -354,42 +300,76 @@ function GanttChart({ spans, trace }: GanttChartProps) {
             <span className="text-xs">{span.name}</span>
           </div>
         ))}
-        
-        <div className="border-l h-4 mx-2 border-muted-foreground/30"></div>
-        
-        {/* Show unique tool types in the legend */}
-        {Array.from(toolTypes).map(toolType => (
-          <div key={toolType} className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors[toolType] || timelineData.typeColors.default }}></span>
-            <span className="text-xs">{toolType}</span>
-          </div>
-        ))}
       </div>
       
       {/* Details section */}
       {selectedTool && (
-        <div className="border rounded-md p-3 bg-card">
-          <div className="flex justify-between items-center mb-2">
-            <h4 className="font-medium">{selectedTool.name}</h4>
-            <Button size="sm" variant="ghost" onClick={() => setSelectedTool(null)} className="h-6 w-6 p-0">
-              ×
-            </Button>
+        <div className="border rounded-md p-3 bg-card max-h-[400px] overflow-y-auto scroll-container">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-6 px-2 mr-1 text-xs flex items-center gap-1"
+                  onClick={() => setSelectedTool(null)}
+                >
+                  <IconArrowLeft size={12} />
+                  <span>Back</span>
+                </Button>
+                <h4 className="font-medium">{selectedTool.name}</h4>
+              </div>
+              {selectedGanttSpan && (
+                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                  <span>From:</span>
+                  <strong>{selectedGanttSpan.name}</strong>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="ghost" onClick={() => setSelectedTool(null)} className="h-6 w-6 p-0">
+                ×
+              </Button>
+            </div>
           </div>
           <div className="text-xs text-muted-foreground mb-2">
             Duration: {selectedTool.duration.toFixed(2)}s
           </div>
           <div className="mb-2">
             <h5 className="text-xs font-medium text-muted-foreground mb-1">Arguments:</h5>
-            <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-24">
+            <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-48 scroll-container">
               {JSON.stringify(selectedTool.args, null, 2)}
             </pre>
           </div>
           <div>
             <h5 className="text-xs font-medium text-muted-foreground mb-1">Output:</h5>
-            <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-24">
+            <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-48 scroll-container">
               {selectedTool.output}
             </pre>
           </div>
+          {selectedGanttSpan && selectedGanttSpan.tools_called && selectedGanttSpan.tools_called.length > 1 && (
+            <div className="mt-4 pt-3 border-t">
+              <h5 className="text-xs font-medium text-muted-foreground mb-2">Other Tools Used by {selectedGanttSpan.name}:</h5>
+              <div className="space-y-1">
+                {selectedGanttSpan.tools_called
+                  .filter(tool => tool.span_id !== selectedTool.span_id)
+                  .map((tool, i) => (
+                    <div 
+                      key={i} 
+                      className="text-xs p-2 bg-muted rounded flex justify-between items-center cursor-pointer hover:bg-muted/80"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTool(tool);
+                      }}
+                    >
+                      <span>{tool.name}</span>
+                      <span className="text-muted-foreground">{tool.duration.toFixed(2)}s</span>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          )}
         </div>
       )}
       
@@ -541,18 +521,10 @@ function GanttChartVisualizer({ spans, trace, onSelectSpan, onSelectTool, select
   const userSpans = spans.filter(span => span.name.toLowerCase().includes("user") || span.name.toLowerCase().includes("input"));
   const agentSpans = spans.filter(span => !userSpans.includes(span));
   
-  // Get unique tool types for the legend
-  const toolTypes = new Set<string>();
-  spans.forEach(span => {
-    span.tools_called.forEach(tool => {
-      toolTypes.add(tool.name);
-    });
-  });
-  
   return (
     <div className="h-full flex flex-col">
       {/* Time axis */}
-      <div className="flex justify-between mb-2 text-xs text-muted-foreground sticky top-0 bg-background z-10 pb-1" suppressHydrationWarning>
+      <div className="flex justify-between mb-1 text-xs text-muted-foreground sticky top-0 bg-background z-10 pb-0.5" suppressHydrationWarning>
         {timelineData.timeMarks.map((mark, i) => (
           <div key={i} suppressHydrationWarning>{mark}</div>
         ))}
@@ -581,14 +553,14 @@ function GanttChartVisualizer({ spans, trace, onSelectSpan, onSelectTool, select
               return (
                 <div 
                   key={`user-${span.span_id}`} 
-                  className={`flex items-center ${isUserFocused ? 'bg-muted/30 -mx-4 px-4' : ''}`}
+                  className={`flex items-center ${isUserFocused ? 'bg-muted/30 -mx-4 px-4' : ''} mb-0.5`}
                   tabIndex={0}
                   onFocus={() => setFocusedSpanIndex(spans.indexOf(span))}
                 >
                   <div className="w-32 text-right pr-3 text-sm">user</div>
-                  <div className="flex-1 relative h-6">
+                  <div className="flex-1 relative h-5">
                     <div 
-                      className={`absolute h-full rounded-sm hover:h-8 hover:-top-1 transition-all duration-75 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
+                      className={`absolute h-full rounded-sm hover:h-7 hover:-top-1 transition-all duration-75 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
                       style={{
                         backgroundColor: timelineData.typeColors["User"] || timelineData.typeColors.default,
                         left: `${((span.start_time - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
@@ -605,62 +577,38 @@ function GanttChartVisualizer({ spans, trace, onSelectSpan, onSelectTool, select
             })}
             
             {/* Rows for agent spans */}
-            {agentSpans.map((span, i) => {
-              const isAgentFocused = focusedSpanIndex === spans.indexOf(span);
-              const isSelected = selectedSpanId === span.span_id;
-              
-              return (
-                <div 
-                  key={`agent-${span.span_id}`} 
-                  className={`flex items-center ${isAgentFocused ? 'bg-muted/30 -mx-4 px-4' : ''}`}
-                  tabIndex={0}
-                  onFocus={() => setFocusedSpanIndex(spans.indexOf(span))}
-                >
-                  <div className="w-32 text-right pr-3 text-sm truncate">{span.name}</div>
-                  <div className="flex-1 relative h-6">
-                    {/* For each agent span */}
-                    <div 
-                      className={`absolute h-full rounded-sm hover:h-8 hover:-top-1 transition-all duration-75 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
-                      style={{
-                        backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors["Assistant"] || timelineData.typeColors.default,
-                        left: `${((span.start_time - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
-                        width: `${(span.duration / timelineData.totalDuration) * 100}%`,
-                        minWidth: "8px",
-                        zIndex: 10
-                      }}
-                      title={`${span.name}: ${span.duration.toFixed(2)}s`}
-                      onClick={() => onSelectSpan(span)}
-                    />
-                    
-                    {/* For each tool call within agent span - improve positioning and z-index */}
-                    {span.tools_called.map((tool, toolIndex) => {
-                      // Calculate a better positioning for tools to avoid overlap
-                      const toolStart = span.start_time + (span.duration * toolIndex / Math.max(1, span.tools_called.length));
-                      const toolWidth = Math.min(tool.duration, span.duration / Math.max(1, span.tools_called.length) * 0.95);
-                        
-                      return (
-                        <div 
-                          key={`tool-${span.span_id}-${toolIndex}`}
-                          className={`absolute h-full rounded-sm hover:h-8 hover:-top-1 transition-all duration-75 cursor-pointer`}
-                          style={{
-                            backgroundColor: timelineData.typeColors[tool.name] || timelineData.typeColors.default,
-                            left: `${((toolStart - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
-                            width: `${(toolWidth / timelineData.totalDuration) * 100}%`,
-                            minWidth: "8px",
-                            zIndex: 20
-                          }}
-                          title={`Tool: ${tool.name} (${tool.duration.toFixed(2)}s)`}
-                          onClick={(e) => {
-                            e.stopPropagation(); // Stop event from bubbling up to span
-                            onSelectTool(tool);
-                          }}
-                        />
-                      );
-                    })}
+            <div className="mt-5 space-y-0">
+              {agentSpans.map((span, i) => {
+                const isAgentFocused = focusedSpanIndex === spans.indexOf(span);
+                const isSelected = selectedSpanId === span.span_id;
+                
+                return (
+                  <div 
+                    key={`agent-${span.span_id}`} 
+                    className={`flex items-center ${isAgentFocused ? 'bg-muted/30 -mx-4 px-4' : ''} h-5 my-0 py-0 mb-3 ${i < agentSpans.length - 1 ? 'border-b border-dotted border-muted-foreground/20 pb-3' : ''}`}
+                    tabIndex={0}
+                    onFocus={() => setFocusedSpanIndex(spans.indexOf(span))}
+                  >
+                    <div className="w-32 text-right pr-3 text-sm truncate">{span.name}</div>
+                    <div className="flex-1 relative h-5">
+                      {/* For each agent span */}
+                      <div 
+                        className={`absolute h-full rounded-sm hover:h-7 hover:-top-1 transition-all duration-75 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
+                        style={{
+                          backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors["Assistant"] || timelineData.typeColors.default,
+                          left: `${((span.start_time - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
+                          width: `${(span.duration / timelineData.totalDuration) * 100}%`,
+                          minWidth: "8px",
+                          zIndex: 10
+                        }}
+                        title={`${span.name}: ${span.duration.toFixed(2)}s`}
+                        onClick={() => onSelectSpan(span)}
+                      />
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -687,16 +635,6 @@ function GanttChartVisualizer({ spans, trace, onSelectSpan, onSelectTool, select
             <span className="text-xs">{span.name}</span>
           </div>
         ))}
-        
-        <div className="border-l h-4 mx-2 border-muted-foreground/30"></div>
-        
-        {/* Show unique tool types in the legend */}
-        {Array.from(toolTypes).map(toolType => (
-          <div key={toolType} className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors[toolType] || timelineData.typeColors.default }}></span>
-            <span className="text-xs">{toolType}</span>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -712,10 +650,15 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
   const [selectedTool, setSelectedTool] = useState<ToolCall | null>(null);
   const [selectedGanttSpan, setSelectedGanttSpan] = useState<Span | null>(null);
 
+  // Add the hook to prevent scroll propagation
+  usePreventScrollPropagation();
+
   useEffect(() => {
     async function fetchTraceData() {
       try {
         setLoading(true);
+        
+        // Fetch trace data from API
         const response = await fetch(`/api/traces/${id}`);
         
         if (!response.ok) {
@@ -723,16 +666,21 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
         }
         
         const data = await response.json();
-        const validatedData = schema.parse(data);
+        
+        // Extract trace metadata for the schema validation
+        const validatedData = schema.parse(data.trace);
         setTrace(validatedData);
         
-        // Use mockSpans for now - in production this would come from the API
-        setSpans(mockSpans);
-        
-        // Set the first span as selected by default if available
-        if (mockSpans.length > 0) {
-          setSelectedSpan(mockSpans[0]);
+        // Set spans from the agents data
+        if (data.agents && Array.isArray(data.agents)) {
+          setSpans(data.agents);
+          
+          // Set the first span as selected by default if available
+          if (data.agents.length > 0) {
+            setSelectedSpan(data.agents[0]);
+          }
         }
+        
       } catch (err) {
         console.error("Error fetching trace:", err);
         setError(err instanceof Error ? err.message : "Failed to load trace data");
@@ -775,7 +723,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
     <div className="max-h-screen flex flex-col overflow-hidden animate-fadeIn">
       {/* Main content takes full height */}
       <main className="flex flex-col overflow-hidden h-full">
-        <div className="flex items-center justify-between text-sm px-6 py-2 border-b bg-muted/20 flex-shrink-0">
+        <div className="flex items-center justify-between text-sm px-6 py-2 border-b bg-muted/20 flex-shrink-0 sticky top-0 z-20">
           {backButton}
           { trace && (
             <div className="flex items-center flex-wrap gap-2 py-2">
@@ -788,7 +736,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
               <Badge variant="outline" className="text-xs">
                 Name: {trace.name}
               </Badge>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs" suppressHydrationWarning>
                 Latency: {((new Date(trace.ended_at).getTime() - new Date(trace.started_at).getTime()) / 1000).toFixed(2)}s
               </Badge>
             </div>
@@ -796,11 +744,11 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
         </div>
         
         {loading ? (
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 overflow-auto">
             <TraceDetailSkeleton />
           </div>
         ) : error ? (
-          <div className="flex-1 p-6 overflow-hidden">
+          <div className="flex-1 overflow-auto p-6">
             <Card className="border-destructive">
               <CardHeader>
                 <CardTitle className="text-destructive">Error</CardTitle>
@@ -815,9 +763,9 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
             <Tabs 
               value={activeTab} 
               onValueChange={setActiveTab} 
-              className="flex-1 flex flex-col overflow-hidden"
+              className="flex-1 flex gap-0 flex-col overflow-hidden"
             >
-              <div className="border-b bg-muted/20 px-6 w-full flex-shrink-0">
+              <div className="border-b bg-muted/20 px-6 w-full flex-shrink-0 sticky top-0 z-10">
                 <TabsList className="h-10 w-auto bg-transparent gap-6 border-0">
                   <TabsTrigger 
                     value="trace-details" 
@@ -848,18 +796,23 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
               <div className="flex-1 overflow-hidden">
                 <TabsContent 
                   value="trace-details" 
-                  className="flex-1 p-0 m-0 data-[state=active]:flex h-full"
+                  className="flex-1 p-0 m-0 data-[state=active]:flex h-full overflow-hidden"
                 >
-                  <div className="flex w-full h-full">
-                    <div className="w-3/5 border-r overflow-y-auto" style={{ height: 'calc(100vh - 110px)' }}>
-                      {/* Input Section */}
-                      <div className="border-b bg-card/50">
-                        <div className="sticky top-0 bg-card z-20 pt-4 px-4 border-b pb-2">
+                  <div className="flex w-full h-full overflow-hidden">
+                    <div className="w-3/5 border-r overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 110px)' }}>
+                      {/* Fixed header sections */}
+                      <div className="flex-shrink-0 border-b">
+                        <div className="bg-card z-20 pt-4 px-4 border-b pb-2">
                           <h2 className="text-base font-semibold flex items-center">
                             <IconMessageCircle size={16} className="mr-2 text-muted-foreground" />
                             Input
                           </h2>
                         </div>
+                      </div>
+                      
+                      {/* Scrollable content area */}
+                      <div className="flex-1 overflow-y-auto">
+                        {/* Input content */}
                         <div className="p-4 pb-6">
                           <Card className="overflow-hidden border border-border">
                             <CardContent className="p-3">
@@ -876,56 +829,60 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                             </CardContent>
                           </Card>
                         </div>
-                      </div>
 
-                      {/* Output Section */}
-                      <div className="bg-card/50">
-                        <div className="sticky top-0 bg-card z-10 pt-4 px-4 border-b pb-2">
-                          <h2 className="text-base font-semibold flex items-center">
-                            <IconMessageDots size={16} className="mr-2 text-muted-foreground" />
-                            Output
-                          </h2>
-                        </div>
-                        <div className="p-4 pb-8">
-                          <Card className="overflow-hidden border border-border">
-                            <CardContent className="p-3">
-                              <div className="flex items-center gap-2 mb-2 border-b pb-2">
-                                <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
-                                  <IconRobot size={14} />
+                        {/* Output Section */}
+                        <div className="border-t">
+                          <div className="flex-shrink-0 bg-card z-10 pt-4 px-4 border-b pb-2">
+                            <h2 className="text-base font-semibold flex items-center">
+                              <IconMessageDots size={16} className="mr-2 text-muted-foreground" />
+                              Output
+                            </h2>
+                          </div>
+                          <div className="p-4 pb-8">
+                            <Card className="overflow-hidden border border-border">
+                              <CardContent className="p-3">
+                                <div className="flex items-center gap-2 mb-2 border-b pb-2">
+                                  <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
+                                    <IconRobot size={14} />
+                                  </div>
+                                  <span className="text-sm font-medium">Assistant</span>
                                 </div>
-                                <span className="text-sm font-medium">Assistant</span>
-                              </div>
-                              <div className="whitespace-pre-wrap pl-8 text-sm">
-                                Today in New York, it's 68°F and partly cloudy with a 20% chance of rain in the afternoon.
-                                
-                                For the latest tech news, Apple just announced their new iPhone 15 with improved camera capabilities and longer battery life. Microsoft released a major Windows update with new AI features, and Tesla unveiled plans for a more affordable electric vehicle.
-                                
-                                Here's a suggested day trip itinerary for New York City:
-                                
-                                9:00 AM - Start with breakfast at a local cafe in Greenwich Village
-                                10:30 AM - Visit the Metropolitan Museum of Art
-                                1:00 PM - Grab lunch at Chelsea Market
-                                2:30 PM - Take a walk on the High Line
-                                4:00 PM - Visit the One World Observatory for panoramic views
-                                6:00 PM - Dinner in Little Italy
-                                8:00 PM - Catch a Broadway show (if available)
-                                
-                                Would you like me to recommend specific restaurants or exhibits at the museum?
-                              </div>
-                            </CardContent>
-                          </Card>
+                                <div className="whitespace-pre-wrap pl-8 text-sm">
+                                  Today in New York, it's 68°F and partly cloudy with a 20% chance of rain in the afternoon.
+                                  
+                                  For the latest tech news, Apple just announced their new iPhone 15 with improved camera capabilities and longer battery life. Microsoft released a major Windows update with new AI features, and Tesla unveiled plans for a more affordable electric vehicle.
+                                  
+                                  Here's a suggested day trip itinerary for New York City:
+                                  
+                                  9:00 AM - Start with breakfast at a local cafe in Greenwich Village
+                                  10:30 AM - Visit the Metropolitan Museum of Art
+                                  1:00 PM - Grab lunch at Chelsea Market
+                                  2:30 PM - Take a walk on the High Line
+                                  4:00 PM - Visit the One World Observatory for panoramic views
+                                  6:00 PM - Dinner in Little Italy
+                                  8:00 PM - Catch a Broadway show (if available)
+                                  
+                                  Would you like me to recommend specific restaurants or exhibits at the museum?
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </div>
                         </div>
                       </div>
                     </div>
                       
                     {/* Right panel - Gantt chart */}
-                    <div className="w-2/5 overflow-y-auto" style={{ height: 'calc(100vh - 110px)', maxHeight: 'calc(100vh - 110px)' }}>
-                      <div className="p-4">
+                    <div className="w-2/5 overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 110px)' }}>
+                      {/* Fixed header */}
+                      <div className="flex-shrink-0 p-4 pb-2">
+                        <h2 className="text-base font-semibold mb-2">Timeline</h2>
+                      </div>
+                      
+                      {/* Scrollable content */}
+                      <div className="flex-1 overflow-y-auto px-4">
                         <div className="flex flex-col">
-                          <h2 className="text-base font-semibold mb-3">Timeline</h2>
-                          
-                          {/* Chart container - increasing height from 240px to 320px */}
-                          <div className="border rounded-md p-4 overflow-hidden" style={{ height: '320px' }}>
+                          {/* Chart container */}
+                          <div className="border rounded-md p-3 overflow-hidden" style={{ height: '320px' }}>
                             <div className="h-full overflow-y-auto">
                               <GanttChartVisualizer 
                                 spans={spans} 
@@ -939,28 +896,72 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                           
                           {/* Details panel */}
                           {selectedTool && (
-                            <div className="mt-4 border rounded-md p-3 bg-card">
-                              <div className="flex justify-between items-center mb-2">
-                                <h4 className="font-medium">{selectedTool.name}</h4>
-                                <Button size="sm" variant="ghost" onClick={() => setSelectedTool(null)} className="h-6 w-6 p-0">
-                                  ×
-                                </Button>
+                            <div className="mt-4 border rounded-md p-3 bg-card max-h-[400px] overflow-y-auto scroll-container">
+                              <div className="flex justify-between items-center mb-3">
+                                <div className="flex flex-col">
+                                  <div className="flex items-center gap-2">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-6 px-2 mr-1 text-xs flex items-center gap-1"
+                                      onClick={() => setSelectedTool(null)}
+                                    >
+                                      <IconArrowLeft size={12} />
+                                      <span>Back</span>
+                                    </Button>
+                                    <h4 className="font-medium">{selectedTool.name}</h4>
+                                  </div>
+                                  {selectedGanttSpan && (
+                                    <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                                      <span>From:</span>
+                                      <strong>{selectedGanttSpan.name}</strong>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button size="sm" variant="ghost" onClick={() => setSelectedTool(null)} className="h-6 w-6 p-0">
+                                    ×
+                                  </Button>
+                                </div>
                               </div>
                               <div className="text-xs text-muted-foreground mb-2">
                                 Duration: {selectedTool.duration.toFixed(2)}s
                               </div>
                               <div className="mb-2">
                                 <h5 className="text-xs font-medium text-muted-foreground mb-1">Arguments:</h5>
-                                <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-24">
+                                <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-48 scroll-container">
                                   {JSON.stringify(selectedTool.args, null, 2)}
                                 </pre>
                               </div>
                               <div>
                                 <h5 className="text-xs font-medium text-muted-foreground mb-1">Output:</h5>
-                                <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-24">
+                                <pre className="text-xs bg-muted p-2 rounded-md overflow-auto max-h-48 scroll-container">
                                   {selectedTool.output}
                                 </pre>
                               </div>
+                              {selectedGanttSpan && selectedGanttSpan.tools_called && selectedGanttSpan.tools_called.length > 1 && (
+                                <div className="mt-4 pt-3 border-t">
+                                  <h5 className="text-xs font-medium text-muted-foreground mb-2">Other Tools Used by {selectedGanttSpan.name}:</h5>
+                                  <div className="space-y-1">
+                                    {selectedGanttSpan.tools_called
+                                      .filter(tool => tool.span_id !== selectedTool.span_id)
+                                      .map((tool, i) => (
+                                        <div 
+                                          key={i} 
+                                          className="text-xs p-2 bg-muted rounded flex justify-between items-center cursor-pointer hover:bg-muted/80"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedTool(tool);
+                                          }}
+                                        >
+                                          <span>{tool.name}</span>
+                                          <span className="text-muted-foreground">{tool.duration.toFixed(2)}s</span>
+                                        </div>
+                                      ))
+                                    }
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
                           
@@ -1019,39 +1020,59 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                 {/* Span Details Tab */}
                 <TabsContent 
                   value="span-details" 
-                  className="flex-1 p-0 m-0 data-[state=active]:flex h-full"
+                  className="flex-1 p-0 m-0 data-[state=active]:flex h-full overflow-hidden"
                 >
-                  <div className="flex w-full h-full">
+                  <div className="flex w-full h-full overflow-hidden">
                     {/* Left Panel - Spans List */}
-                    <div className="w-60 border-r overflow-y-auto" style={{ height: 'calc(100vh - 110px)' }}>
+                    <div className="w-60 border-r overflow-hidden flex flex-col flex-shrink-0" style={{ height: 'calc(100vh - 110px)' }}>
+                      {/* Fixed header */}
                       <div className="p-4 border-b flex-shrink-0">
-                        <h3 className="text-base font-semibold mb-1">Spans</h3>
+                        <h3 className="text-base font-semibold mb-1">Agents & Spans</h3>
                         <p className="text-xs text-muted-foreground">
                           {spans.length} span{spans.length !== 1 ? 's' : ''} in this trace
                         </p>
                       </div>
-                      <div>
-                        {spans.map((span, index) => (
-                          <div 
-                            key={span.span_id}
-                            className={`p-3 border-b cursor-pointer transition-colors ${
-                              selectedSpan?.span_id === span.span_id 
-                                ? 'bg-primary/5 border-l-4 border-l-primary' 
-                                : 'hover:bg-muted/30 border-l-4 border-l-transparent'
-                            }`}
-                            onClick={() => setSelectedSpan(span)}
-                          >
-                            <div className="font-medium">{span.name}</div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                              <IconClock size={14} />
-                              <span suppressHydrationWarning>{formatDuration(span.duration)}</span>
+                      {/* Scrollable area */}
+                      <div className="overflow-y-auto flex-1 scroll-container">
+                        {/* Group spans by agent name */}
+                        {Object.entries(
+                          spans.reduce((acc, span) => {
+                            const agentName = span.name.includes("Agent") || span.name.includes("Planner") || 
+                                            span.name.includes("Processor") || span.name.includes("Analyzer") || 
+                                            span.name.includes("Presenter") || span.name.includes("Generator") 
+                                            ? span.name : "Other";
+                            acc[agentName] = acc[agentName] || [];
+                            acc[agentName].push(span);
+                            return acc;
+                          }, {} as Record<string, Span[]>)
+                        ).map(([agentName, agentSpans]) => (
+                          <div key={agentName} className="mb-2">
+                            <div className="px-3 py-2 text-xs font-medium text-muted-foreground bg-muted/30">
+                              {agentName}
                             </div>
-                            {span.tools_called.length > 0 && (
-                              <div className="flex items-center gap-1 text-xs mt-2 text-primary">
-                                <IconCode size={14} />
-                                <span>{span.tools_called.length} tool call{span.tools_called.length > 1 ? 's' : ''}</span>
+                            {agentSpans.map((span) => (
+                              <div 
+                                key={span.span_id}
+                                className={`p-3 border-b cursor-pointer transition-colors ${
+                                  selectedSpan?.span_id === span.span_id 
+                                    ? 'bg-primary/5 border-l-4 border-l-primary' 
+                                    : 'hover:bg-muted/30 border-l-4 border-l-transparent'
+                                }`}
+                                onClick={() => setSelectedSpan(span)}
+                              >
+                                <div className="font-medium">{span.name}</div>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                  <IconClock size={14} />
+                                  <span suppressHydrationWarning>{formatDuration(span.duration)}</span>
+                                </div>
+                                {span.tools_called.length > 0 && (
+                                  <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                                    <IconCode size={12} />
+                                    <span>{span.tools_called.length} tool{span.tools_called.length !== 1 ? 's' : ''}</span>
+                                  </div>
+                                )}
                               </div>
-                            )}
+                            ))}
                           </div>
                         ))}
                         {spans.length === 0 && (
@@ -1063,10 +1084,10 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                     </div>
                   
                     {/* Right Panel - Span Details */}
-                    <div className="flex-1 overflow-y-auto" style={{ height: 'calc(100vh - 110px)', maxHeight: 'calc(100vh - 110px)' }}>
+                    <div className="flex-1 overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 110px)' }}>
                       {selectedSpan ? (
-                        <div className="p-4">
-                          <div className="mb-4 flex-shrink-0">
+                        <div className="h-full flex flex-col overflow-hidden">
+                          <div className="p-4 flex-shrink-0 border-b">
                             <h2 className="text-xl font-semibold">{selectedSpan.name}</h2>
                             <div className="flex items-center gap-2 mt-1">
                               <Badge variant="outline">
@@ -1075,12 +1096,25 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                               <Badge variant="outline">
                                 ID: {selectedSpan.span_id}
                               </Badge>
+                              <Badge variant="secondary" className="bg-primary/10 hover:bg-primary/15">
+                                Agent
+                              </Badge>
+                            </div>
+                            <div className="mt-3 text-sm text-muted-foreground flex items-center gap-2">
+                              <IconClock size={16} />
+                              <span>
+                                Start: <span suppressHydrationWarning>{formatTime(selectedSpan.start_time)}</span>
+                              </span>
+                              <span className="mx-2">•</span>
+                              <span>
+                                End: <span suppressHydrationWarning>{formatTime(selectedSpan.end_time)}</span>
+                              </span>
                             </div>
                           </div>
                           
-                          <div className="flex-1">
-                            <Tabs defaultValue="completion" className="w-full">
-                              <TabsList className="bg-transparent border-b w-full px-0 rounded-none h-10 justify-start gap-4 mb-4">
+                          <div className="flex-1 overflow-hidden">
+                            <Tabs defaultValue="completion" className="h-full flex flex-col overflow-hidden">
+                              <TabsList className="bg-transparent border-b w-full px-4 rounded-none h-10 justify-start gap-4 flex-shrink-0">
                                 <TabsTrigger 
                                   value="completion" 
                                   className="text-base bg-transparent data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:font-medium rounded-none border-0 relative h-10"
@@ -1102,77 +1136,198 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                   <span>Timing</span>
                                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
                                 </TabsTrigger>
+                                <TabsTrigger 
+                                  value="agent" 
+                                  className="text-base bg-transparent data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:font-medium rounded-none border-0 relative h-10"
+                                >
+                                  <span>Agent Info</span>
+                                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
+                                </TabsTrigger>
                               </TabsList>
                               
-                              <TabsContent value="completion" className="m-0 data-[state=active]:block">
-                                <Card className="border-0 shadow-none">
-                                  <CardHeader className="pb-2 border-b">
-                                    <div className="flex items-center gap-2">
-                                      <IconMessageCircle size={16} />
-                                      <CardTitle className="text-base">Final Completion</CardTitle>
+                              {/* Tab Content Container - This is where we need to fix scrolling */}
+                              <div className="flex-1 overflow-hidden">
+                                <TabsContent value="completion" className="h-full p-0 m-0 data-[state=active]:block overflow-hidden">
+                                  <div className="h-full overflow-hidden">
+                                    <div className="px-4 py-4 h-full overflow-y-auto scroll-container">
+                                      <div className="flex items-center gap-2 mb-2 pb-2 border-b">
+                                        <IconMessageCircle size={16} />
+                                        <h3 className="text-base font-medium">Final Completion</h3>
+                                      </div>
+                                      <div className="whitespace-pre-wrap bg-muted p-4 rounded-md">
+                                        {selectedSpan.final_completion}
+                                      </div>
                                     </div>
-                                  </CardHeader>
-                                  <CardContent className="pt-4">
-                                    <div className="whitespace-pre-wrap bg-muted p-4 rounded-md">
-                                      {selectedSpan.final_completion}
+                                  </div>
+                                </TabsContent>
+                                
+                                <TabsContent value="tools" className="h-full p-0 m-0 data-[state=active]:block overflow-hidden">
+                                  <div className="h-full overflow-hidden">
+                                    <div className="px-4 py-4 h-full overflow-y-auto scroll-container">
+                                      <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+                                        <IconCode size={16} />
+                                        <h3 className="text-base font-medium">Tools Called</h3>
+                                      </div>
+                                      {selectedSpan.tools_called.length === 0 ? (
+                                        <p className="text-muted-foreground">No tools were called in this span.</p>
+                                      ) : (
+                                        <div className="space-y-4">
+                                          {selectedSpan.tools_called.map((tool: ToolCall, index: number) => (
+                                            <div key={index} className="border rounded-md p-4 border-border">
+                                              <div className="font-medium">{tool.name}</div>
+                                              <div className="text-xs text-muted-foreground mt-1">
+                                                Duration: {formatDuration(tool.duration)}
+                                              </div>
+                                              
+                                              <div className="mt-3">
+                                                <div className="text-xs font-medium text-muted-foreground mb-1">Arguments:</div>
+                                                <pre className="text-xs bg-muted p-2 rounded-md overflow-auto w-full max-h-32 scroll-container">
+                                                  {JSON.stringify(tool.args, null, 2)}
+                                                </pre>
+                                              </div>
+                                              
+                                              <div className="mt-3">
+                                                <div className="text-xs font-medium text-muted-foreground mb-1">Output:</div>
+                                                <pre className="text-xs bg-muted p-2 rounded-md overflow-auto w-full max-h-32 scroll-container">
+                                                  {tool.output}
+                                                </pre>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
                                     </div>
-                                  </CardContent>
-                                </Card>
-                              </TabsContent>
-                              
-                              <TabsContent value="tools" className="m-0 data-[state=active]:block">
-                                <Card className="border-0 shadow-none">
-                                  <CardHeader className="border-b pb-3">
-                                    <CardTitle className="text-base">Tools Called</CardTitle>
-                                  </CardHeader>
-                                  <CardContent className="pt-4">
-                                    {selectedSpan.tools_called.length === 0 ? (
-                                      <p className="text-muted-foreground">No tools were called in this span.</p>
-                                    ) : (
-                                      <div className="space-y-4">
-                                        {selectedSpan.tools_called.map((tool: ToolCall, index: number) => (
-                                          <div key={index} className="border rounded-md p-4 border-border">
-                                            <div className="font-medium">{tool.name}</div>
-                                            <div className="text-xs text-muted-foreground mt-1">
-                                              Duration: {formatDuration(tool.duration)}
-                                            </div>
-                                            
-                                            <div className="mt-3">
-                                              <div className="text-xs font-medium text-muted-foreground mb-1">Arguments:</div>
-                                              <pre className="text-xs bg-muted p-2 rounded-md overflow-auto w-full">
-                                                {JSON.stringify(tool.args, null, 2)}
-                                              </pre>
-                                            </div>
-                                            
-                                            <div className="mt-3">
-                                              <div className="text-xs font-medium text-muted-foreground mb-1">Output:</div>
-                                              <pre className="text-xs bg-muted p-2 rounded-md overflow-auto w-full">
-                                                {tool.output}
-                                              </pre>
+                                  </div>
+                                </TabsContent>
+                                
+                                <TabsContent value="timing" className="h-full p-0 m-0 data-[state=active]:block overflow-hidden">
+                                  <div className="h-full overflow-hidden">
+                                    <div className="px-4 py-4 h-full overflow-y-auto scroll-container">
+                                      <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+                                        <IconClock size={16} />
+                                        <h3 className="text-base font-medium">Timing Information</h3>
+                                      </div>
+                                      <dl className="grid grid-cols-1 gap-4">
+                                        <div className="pb-3">
+                                          <dt className="text-sm font-medium text-muted-foreground">Duration</dt>
+                                          <dd className="text-base" suppressHydrationWarning>{formatDuration(selectedSpan.duration)}</dd>
+                                        </div>
+                                      </dl>
+                                    </div>
+                                  </div>
+                                </TabsContent>
+                                
+                                <TabsContent value="agent" className="h-full p-0 m-0 data-[state=active]:block overflow-hidden">
+                                  <div className="h-full overflow-hidden">
+                                    <div className="px-4 py-4 h-full overflow-y-auto scroll-container">
+                                      <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+                                        <IconRobot size={16} />
+                                        <h3 className="text-base font-medium">Agent Information</h3>
+                                      </div>
+                                      
+                                      <div className="space-y-6">
+                                        <div>
+                                          <h4 className="text-sm font-medium mb-2">Agent</h4>
+                                          <div className="p-3 bg-muted rounded-md">
+                                            <div className="font-medium">{selectedSpan.name}</div>
+                                            <div className="text-sm text-muted-foreground mt-1">
+                                              Span ID: {selectedSpan.span_id}
                                             </div>
                                           </div>
-                                        ))}
+                                        </div>
+                                        
+                                        <div>
+                                          <h4 className="text-sm font-medium mb-2">Tools Used</h4>
+                                          {selectedSpan.tools_called.length === 0 ? (
+                                            <p className="text-sm text-muted-foreground">No tools were used by this agent.</p>
+                                          ) : (
+                                            <div className="space-y-2">
+                                              {selectedSpan.tools_called.map((tool, index) => (
+                                                <div key={index} className="p-2 bg-muted/60 rounded-md">
+                                                  <div className="font-medium">{tool.name}</div>
+                                                  <div className="text-xs text-muted-foreground mt-1">
+                                                    Duration: {formatDuration(tool.duration)}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                        
+                                        <div>
+                                          <h4 className="text-sm font-medium mb-2">Execution Time</h4>
+                                          <div className="grid grid-cols-2 gap-2">
+                                            <div className="p-3 bg-muted rounded-md">
+                                              <div className="text-xs text-muted-foreground mb-1">Start Time</div>
+                                              <div className="text-sm" suppressHydrationWarning>
+                                                {formatTime(selectedSpan.start_time)}
+                                              </div>
+                                            </div>
+                                            <div className="p-3 bg-muted rounded-md">
+                                              <div className="text-xs text-muted-foreground mb-1">End Time</div>
+                                              <div className="text-sm" suppressHydrationWarning>
+                                                {formatTime(selectedSpan.end_time)}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        
+                                        <div>
+                                          <h4 className="text-sm font-medium mb-2">Related Agents</h4>
+                                          {spans.filter(span => span.span_id !== selectedSpan.span_id).length === 0 ? (
+                                            <p className="text-sm text-muted-foreground">No other agents in this trace.</p>
+                                          ) : (
+                                            <div className="space-y-2">
+                                              {spans
+                                                .filter(span => span.span_id !== selectedSpan.span_id)
+                                                .map((span) => {
+                                                  // Determine relationship based on timing
+                                                  let relationship = "Parallel";
+                                                  if (span.end_time <= selectedSpan.start_time) {
+                                                    relationship = "Preceding";
+                                                  } else if (span.start_time >= selectedSpan.end_time) {
+                                                    relationship = "Following";
+                                                  }
+                                                  
+                                                  return (
+                                                    <div 
+                                                      key={span.span_id} 
+                                                      className="p-2 bg-muted/60 rounded-md flex justify-between items-center cursor-pointer hover:bg-muted"
+                                                      onClick={() => setSelectedSpan(span)}
+                                                    >
+                                                      <div>
+                                                        <div className="font-medium">{span.name}</div>
+                                                        <div className="text-xs text-muted-foreground">
+                                                          Duration: {formatDuration(span.duration)}
+                                                        </div>
+                                                      </div>
+                                                      <div>
+                                                        <Badge 
+                                                          variant={
+                                                            relationship === "Preceding" ? "outline" : 
+                                                            relationship === "Following" ? "secondary" : 
+                                                            "default"
+                                                          }
+                                                          className={
+                                                            relationship === "Preceding" ? "text-blue-500 bg-blue-500/10" : 
+                                                            relationship === "Following" ? "text-green-500 bg-green-500/10" : 
+                                                            "text-amber-500 bg-amber-500/10"
+                                                          }
+                                                        >
+                                                          {relationship}
+                                                        </Badge>
+                                                      </div>
+                                                    </div>
+                                                  );
+                                                })}
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
-                                    )}
-                                  </CardContent>
-                                </Card>
-                              </TabsContent>
-                              
-                              <TabsContent value="timing" className="m-0 data-[state=active]:block">
-                                <Card className="border-0 shadow-none">
-                                  <CardHeader className="border-b pb-3">
-                                    <CardTitle className="text-base">Timing Information</CardTitle>
-                                  </CardHeader>
-                                  <CardContent className="pt-4">
-                                    <dl className="grid grid-cols-1 gap-4">
-                                      <div className="pb-3">
-                                        <dt className="text-sm font-medium text-muted-foreground">Duration</dt>
-                                        <dd className="text-base" suppressHydrationWarning>{formatDuration(selectedSpan.duration)}</dd>
-                                      </div>
-                                    </dl>
-                                  </CardContent>
-                                </Card>
-                              </TabsContent>
+                                    </div>
+                                  </div>
+                                </TabsContent>
+                              </div>
                             </Tabs>
                           </div>
                         </div>
@@ -1269,22 +1424,53 @@ function TraceDetailSkeleton() {
               ))}
             </div>
             
-            {/* Gantt chart skeleton */}
+            {/* Gantt chart skeleton - use fixed values instead of random */}
             <div className="flex-1">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center mb-4">
-                  <Skeleton className="w-32 h-4 mr-3" />
-                  <div className="flex-1 relative h-6">
-                    <Skeleton 
-                      className="absolute h-full rounded-sm" 
-                      style={{
-                        left: `${Math.random() * 30}%`,
-                        width: `${30 + Math.random() * 50}%`
-                      }}
-                    />
-                  </div>
+              <div className="flex items-center mb-4">
+                <Skeleton className="w-32 h-4 mr-3" />
+                <div className="flex-1 relative h-6">
+                  <Skeleton 
+                    className="absolute h-full rounded-sm" 
+                    style={{ left: "10%", width: "40%" }}
+                  />
                 </div>
-              ))}
+              </div>
+              <div className="flex items-center mb-4">
+                <Skeleton className="w-32 h-4 mr-3" />
+                <div className="flex-1 relative h-6">
+                  <Skeleton 
+                    className="absolute h-full rounded-sm" 
+                    style={{ left: "15%", width: "55%" }}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center mb-4">
+                <Skeleton className="w-32 h-4 mr-3" />
+                <div className="flex-1 relative h-6">
+                  <Skeleton 
+                    className="absolute h-full rounded-sm" 
+                    style={{ left: "25%", width: "30%" }}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center mb-4">
+                <Skeleton className="w-32 h-4 mr-3" />
+                <div className="flex-1 relative h-6">
+                  <Skeleton 
+                    className="absolute h-full rounded-sm" 
+                    style={{ left: "5%", width: "70%" }}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center mb-4">
+                <Skeleton className="w-32 h-4 mr-3" />
+                <div className="flex-1 relative h-6">
+                  <Skeleton 
+                    className="absolute h-full rounded-sm" 
+                    style={{ left: "20%", width: "45%" }}
+                  />
+                </div>
+              </div>
             </div>
             
             {/* Legend skeleton */}

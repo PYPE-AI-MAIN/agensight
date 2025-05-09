@@ -569,13 +569,13 @@ export default function Page() {
             )}
             
             {activeTab === "traces" && (
-              <div className="border rounded-lg flex flex-col bg-card/50 backdrop-blur-sm h-[550px] overflow-hidden">
+              <div className="border rounded-lg flex flex-col bg-card/50 backdrop-blur-sm h-[550px] pb-0">
                 {tracesLoading ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="flex items-center justify-center h-full">
                     <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
                   </div>
                 ) : traces && traces.length > 0 ? (
-                  <div className="flex-1 overflow-auto w-full">
+                  <div className="flex-1 flex flex-col h-full">
                     <TracesTable data={traces} />
                   </div>
                 ) : (
