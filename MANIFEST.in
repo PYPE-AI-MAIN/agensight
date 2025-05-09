@@ -1,1 +1,1 @@
-recursive-include agensight/frontend *
+recursive-include agensight/ui/out *

@@ -1,0 +1,70 @@
+{
+  "agents": [
+    {
+      "name": "AnalysisAgent",
+      "prompt": "You are an expert medical analyst specialized in reviewing patient data and providing comprehensive insights.",
+      "variables": [
+        "patient_name",
+        "age",
+        "gender",
+        "report"
+      ],
+      "modelParams": {
+        "model": "gpt-4o",
+        "temperature": 0.2,
+        "top_p": 1,
+        "max_tokens": 2500
+      }
+    },
+    {
+      "name": "ModelManager",
+      "prompt": "You are a model manager responsible for coordinating between different specialized agents and ensuring data flows correctly.",
+      "variables": [
+        "system_prompt",
+        "data"
+      ],
+      "modelParams": {
+        "model": "gpt-4o-mini",
+        "temperature": 0.1,
+        "top_p": 1,
+        "max_tokens": 2000
+      }
+    },
+    {
+      "name": "D",
+      "prompt": "You are a model manager responsible for coordinating between different specialized agents and ensuring data flows correctly.",
+      "variables": [
+        "system_prompt",
+        "data"
+      ],
+      "modelParams": {
+        "model": "gpt-4o-mini",
+        "temperature": 0.1,
+        "top_p": 1,
+        "max_tokens": 2000
+      }
+    }
+  ],
+  "connections": [
+    {
+      "from": "Start",
+      "to": "AnalysisAgent"
+    },
+    {
+      "from": "AnalysisAgent",
+      "to": "ModelManager"
+    },
+    {
+      "from": "ModelManager",
+      "to": "D"
+    },
+    {
+      "from": "D",
+      "to": "ModelManager"
+    },
+    {
+      "from": "ModelManager",
+      "to": "End"
+    }
+  ]
+}

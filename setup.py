@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="agensight",
-    version="0.1.9",
+    version="0.2.3",
     author="Deepesh Agrawal",
     description="A Python SDK for logging and visualizing OpenAI agent interactions, with a built-in CLI and web dashboard.",
     long_description=long_description,
@@ -16,6 +16,7 @@ setup(
         "openai",  
         "requests",
         "flask",  
+        "flask_cors"
     ],
     entry_points={
         "console_scripts": [
@@ -25,3 +26,4 @@ setup(
     python_requires=">=3.7",
     include_package_data=True,
 )
+

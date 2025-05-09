@@ -1,3 +1,4 @@
 openai>=1.0.0
 Flask
 pytest
+flask_cors

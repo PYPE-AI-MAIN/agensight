@@ -1,55 +1,99 @@
 # Agensight
 
-Agensight is a Python SDK and CLI tool that helps you log, track, and visualize your OpenAI agent interactions.  
-It is designed for developers building LLM-powered applications who want to keep a record of prompts, completions, and agent behavior for debugging, analytics, or demonstration.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
+
+Agensight is a powerful SDK for visualizing, managing, and debugging AI agents. It provides intuitive tools to monitor agent interactions, manage configurations, and improve the development workflow for AI systems.
 
 ## Features
 
-- **Easy Logging:** Log every prompt and response from your agent with a single line of code.
-- **Web Dashboard:** Instantly view and explore your agent’s history in your browser.
-- **CLI Tool:** Launch the dashboard and manage your logs from the command line.
-- **Seamless Integration:** Works with OpenAI’s API and your own agent logic.
+- **Agent Visualization**: Interactive graph-based visualization of agent interactions and data flow
+- **Configuration Management**: Version control for agent configurations
+- **Prompt Engineering**: Edit and optimize prompts with a built-in editor
+- **Web Dashboard**: Intuitive UI for monitoring and managing your agents
+- **Command Line Interface**: Quickly access your agents from the terminal
 
-## Example Usage
+## Installation
 
-```python
-import openai
-from agensight.agent import Agent
-
-client = openai.OpenAI()  # Set your API key in env or pass it here
-
-agent = Agent("new_agent")
-
-prompt_template = "Tell me {tell} and say {say}"
-values = {"tell": "hello", "say": "world"}
-
-result = agent.wrapper(prompt_template, values)
-
-response = openai.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=[{"role": "user", "content": result}]
-)
-
-output = response.choices[0].message.content
-
-agent.log_interaction(result, output)
+```bash
+pip install agensight
 ```
 
-## Getting Started
+## Quick Start
 
-1. **Install:**
+### Initialize Agensight
+
+```python
+from agensight import Agent
+
+# Create an agent
+agent = Agent("AnalysisAgent")
+
+# Set a prompt template with variables
+prompt_template = """
+Analyze the following {data_type} data: {data}
+"""
+
+# Use the agent with variable substitution
+prompt = agent.wrapper(
+    prompt_template=prompt_template,
+    values={
+        "data_type": "medical",
+        "data": "patient temperature: 98.6F, heart rate: 72bpm"
+    }
+)
+
+# Log interactions for later analysis
+output = "Analysis: Normal vital signs"
+agent.log_interaction(prompt, output)
+```
+
+### Launch the Dashboard
+
    ```bash
-   pip install agensight
-   ```
+# Open the web dashboard
+agensight view
+```
 
-2. **Log interactions in your code** (see example above).
+## Configuration
 
-3. **View your project:**
-   ```bash
-   agensight view
-   ```
-   This will open a web dashboard to explore your agent’s activity.
+Agensight uses a configuration file to manage agents, connections, and settings:
+
+```json
+{
+  "agents": [
+    {
+      "name": "AnalysisAgent",
+      "prompt": "You are an expert analysis agent...",
+      "variables": ["input_data"],
+      "modelParams": {
+        "model": "gpt-4o",
+        "temperature": 0.2
+      }
+    }
+  ],
+  "connections": [
+    {"from": "AnalysisAgent", "to": "OutputAgent"}
+  ]
+}
+```
+
+## Documentation
+
+For detailed documentation, please visit our [docs](./docs):
+
+- [API Reference](./docs/api-reference.md)
+- [Advanced Configuration](./docs/advanced-configuration.md)
+- [Examples](./examples/)
+
+## Contributing
+
+Contributions are welcome! Please read our [contributing guidelines](./CONTRIBUTING.md) to get started.
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## Support
+
+For questions, issues or feature requests, please [create an issue](https://github.com/yourusername/agensight/issues).
