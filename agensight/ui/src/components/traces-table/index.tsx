@@ -136,7 +136,7 @@ export function TracesTable({
     }));
     
     // Use shallow routing to avoid full page refresh
-    router.push(`/trace/${traceId}`, { scroll: false });
+    router.push(`/trace?id=${traceId}`, { scroll: false });
   };
 
   // Restore table state from session storage on component mount

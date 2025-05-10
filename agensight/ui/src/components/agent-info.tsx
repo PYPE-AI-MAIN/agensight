@@ -19,6 +19,8 @@ import rehypeSanitize from "rehype-sanitize"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { IconAdjustments, IconCode, IconPencil, IconVersions } from "@tabler/icons-react"
 import { Badge } from "@/components/ui/badge"
+import { updateAgent } from "@/lib/services/config"
+import { toast } from "@/components/ui/use-toast"
 
 // Import markdown editor dynamically to avoid SSR issues
 const MDEditor = dynamic(
@@ -58,6 +60,17 @@ export function AgentInfo({
   configVersion?: string
   onSave?: (updatedAgent: any) => Promise<void>
 }) {
+  // State variables
+  const [prompt, setPrompt] = useState("");
+  const [isAgentInfoOpen, setIsAgentInfoOpen] = useState(false);
+  const [model, setModel] = useState("");
+  const [temperature, setTemperature] = useState(0);
+  const [topP, setTopP] = useState(0);
+  const [maxTokens, setMaxTokens] = useState(0);
+  const [activeTab, setActiveTab] = useState("prompt");
+  const [saveInProgress, setSaveInProgress] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
   // Validate agent data
   const isValidAgent = useMemo(() => {
     return agent && typeof agent === 'object' && agent.name;
@@ -70,8 +83,13 @@ export function AgentInfo({
     return agent.prompt || "";
   }, [agent, isValidAgent]);
 
-  const [prompt, setPrompt] = useState(initialPrompt);
-  const [isAgentInfoOpen, setIsAgentInfoOpen] = useState(isValidAgent);
+  useEffect(() => {
+    setPrompt(initialPrompt);
+  }, [initialPrompt]);
+  
+  useEffect(() => {
+    setIsAgentInfoOpen(isValidAgent);
+  }, [isValidAgent]);
   
   // Reset prompt when agent changes
   useEffect(() => {
@@ -94,12 +112,6 @@ export function AgentInfo({
     topP: agent?.modelParams?.top_p || 1,
     maxTokens: agent?.modelParams?.max_tokens || 2000
   }), [agent]);
-  
-  const [model, setModel] = useState(initialModelParams.model);
-  const [temperature, setTemperature] = useState(initialModelParams.temperature);
-  const [topP, setTopP] = useState(initialModelParams.topP);
-  const [maxTokens, setMaxTokens] = useState(initialModelParams.maxTokens);
-  const [activeTab, setActiveTab] = useState("prompt");
   
   // Reset model params when agent changes
   useEffect(() => {
@@ -131,20 +143,24 @@ export function AgentInfo({
   
   const handleSaveChanges = useCallback(async () => {
     if (!isValidAgent) return;
+
+    setSaveInProgress(true);
+    setValidationErrors({});
+    
+    // Create a copy of the edited agent
+    const updatedAgent = {
+      ...agent,
+      prompt,
+      variables: promptVariables,
+      modelParams: {
+        model,
+        temperature,
+        top_p: topP,
+        max_tokens: maxTokens
+      }
+    };
     
     try {
-      const updatedAgent: AgentData = {
-        name: agent.name,
-        prompt: prompt,
-        variables: promptVariables,
-        modelParams: {
-          model: model,
-          temperature: temperature,
-          top_p: topP,
-          max_tokens: maxTokens
-        }
-      };
-      
       if (onSave) {
         await onSave(updatedAgent);
         handleClose();
@@ -155,69 +171,58 @@ export function AgentInfo({
           return;
         }
         
-        // Use a standard message since we're not showing the commit message input anymore
-        const standardMessage = `Updated agent: ${agent.name}`;
-        
-        console.log(`Directly updating agent in version: ${configVersion}`);
-        
-        // Create payload with explicit version
-        const payload = { 
+        // Log what we're actually sending to help debug
+        console.log('Updating agent with data:', {
           agent: updatedAgent,
-          commit_message: standardMessage,
-          sync_to_main: false, // Explicitly set to false to ensure we only update the version file
-          version: configVersion // Pass the current version to ensure we update the right file
-        };
-        
-        // Log the exact payload we're sending
-        console.log('Agent-info update payload:', JSON.stringify(payload, null, 2));
-        
-        const res = await fetch('/api/update_agent', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload),
+          config_version: configVersion
         });
         
-        // Get raw response text for debugging
-        const responseText = await res.text();
-        console.log('Agent-info raw response:', responseText);
+        // Use the API service to update the agent
+        const result:any = await updateAgent({
+          agent: updatedAgent,
+          config_version: configVersion
+        });
         
-        // Try to parse the response
-        let result;
-        try {
-          result = JSON.parse(responseText);
-        } catch (e) {
-          console.error('Failed to parse response:', e);
-          alert('Error updating agent: Invalid response from server');
-          return;
-        }
-        
-        if (res.ok) {
-          // Success - parse the response to get details
-          console.log('Update result:', result);
-          
-          // Check if a new version was created (shouldn't happen but just in case)
-          if (result.version !== configVersion) {
-            console.warn(`Warning: Created new version ${result.version} instead of updating ${configVersion}`);
-          }
-          
+        if (result.success) {
+          toast({
+            title: "Success",
+            description: `Agent ${agent.name} updated successfully in ${result.version || 'current version'}`,
+            duration: 3000,
+          });
           handleClose();
         } else {
-          // Parse error response
-          let errorMessage = "Failed to update agent";
-          if (result && result.error) {
-            errorMessage = result.error;
-          }
-          console.error('Failed to update agent:', errorMessage);
-          alert(`Error updating agent: ${errorMessage}`);
+          toast({
+            title: "Error",
+            description: result.message || "Failed to update agent",
+            variant: "destructive",
+            duration: 3000,
+          });
         }
       }
     } catch (error) {
-      console.error('Error updating agent:', error);
-      alert('Error updating agent');
+      console.error('Error saving agent:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update agent",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setSaveInProgress(false);
     }
-  }, [agent, isValidAgent, prompt, promptVariables, model, temperature, topP, maxTokens, onSave, configVersion, handleClose]);
+  }, [
+    isValidAgent, 
+    agent, 
+    prompt, 
+    promptVariables, 
+    model, 
+    temperature, 
+    topP, 
+    maxTokens, 
+    onSave, 
+    configVersion, 
+    handleClose
+  ]);
 
   // If agent is invalid, don't render the dialog
   if (!isValidAgent) {

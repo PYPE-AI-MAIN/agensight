@@ -21,7 +21,7 @@ interface AgentConfig {
   };
 }
 
-interface Connection {
+export interface Connection {
   from: string;
   to: string;
 }

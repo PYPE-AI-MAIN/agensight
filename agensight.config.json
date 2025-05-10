@@ -18,7 +18,7 @@
     },
     {
       "name": "ModelManager",
-      "prompt": "You are a model manager responsible for coordinating between different specialized agents and ensuring data flows correctly.",
+      "prompt": "deepesh are a model manager responsible for coordinating between different specialized agents and ensuring data flows correctly. nlknkl;nl",
       "variables": [
         "system_prompt",
         "data"

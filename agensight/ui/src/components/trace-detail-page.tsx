@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { IconArrowLeft, IconClock, IconCode, IconMessageCircle, IconUser, IconRobot, IconChevronRight, IconFile, IconList, IconMessageDots, IconBrandTabler, IconSettings } from "@tabler/icons-react";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getTraceById, getSpanDetailsById } from "@/lib/services/traces";
+import { useQuery } from "@tanstack/react-query";
 
 // Define types locally for the span data
 interface ToolCall {
@@ -668,15 +670,110 @@ function GanttChartVisualizer({ spans, trace, onSelectSpan, onSelectTool, select
 }
 
 function TraceDetailPage({ id, router }: TraceDetailPageProps) {
+  const [activeTab, setActiveTab] = useState("trace-details");
   const [trace, setTrace] = useState<TraceItem | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedSpan, setSelectedSpan] = useState<Span | null>(null);
   const [spans, setSpans] = useState<Span[]>([]);
-  const [activeTab, setActiveTab] = useState<string>("trace-details");
+  const [selectedSpan, setSelectedSpan] = useState<Span | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [spanDetailsLoading, setSpanDetailsLoading] = useState<boolean>(false);
   const [selectedTool, setSelectedTool] = useState<ToolCall | null>(null);
   const [selectedGanttSpan, setSelectedGanttSpan] = useState<Span | null>(null);
-  const [spanDetailsLoading, setSpanDetailsLoading] = useState(false);
+
+  // Use React Query for the trace data
+  const { 
+    data: traceData,
+    isLoading 
+  } = useQuery({
+    queryKey: ['trace', id],
+    queryFn: () => getTraceById(id)
+  });
+  
+  // Process trace data when it changes
+  useEffect(() => {
+    if (traceData) {
+      try {
+        // Our new format doesn't match the schema, so we'll handle it directly
+        console.log("Received trace data:", traceData);
+        
+        // Create a minimal trace object with the fields we have
+        setTrace({
+          id: traceData.id || "unknown",
+          name: "Trace Details",
+          session_id: "session",
+          started_at: (traceData.agents?.[0]?.start_time || Date.now() / 1000).toString(),
+          ended_at: (traceData.agents?.[traceData.agents.length - 1]?.end_time || Date.now() / 1000).toString(),
+          metadata: JSON.stringify({
+            trace_input: traceData.trace_input,
+            trace_output: traceData.trace_output
+          })
+        });
+        
+        // Set spans from the agents data
+        if (traceData.agents && Array.isArray(traceData.agents)) {
+          setSpans(traceData.agents);
+        
+          // Set the first span as selected by default if available
+          if (traceData.agents.length > 0) {
+            setSelectedSpan(traceData.agents[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Error processing trace data:", err);
+        setError(err instanceof Error ? err.message : "Failed to process trace data");
+      }
+    }
+  }, [traceData]);
+  
+  // Handle errors in trace fetch
+  useEffect(() => {
+    if (isLoading) {
+      setError(null);
+    }
+  }, [isLoading]);
+  
+  // Use React Query for span details
+  const { 
+    data: spanData,
+    isLoading: isSpanLoading 
+  } = useQuery({
+    queryKey: ['span', selectedSpan?.span_id],
+    queryFn: () => selectedSpan?.span_id ? getSpanDetailsById(selectedSpan.span_id) : null,
+    enabled: !!selectedSpan?.span_id && !selectedSpan?.details
+  });
+  
+  // Process span details when they change
+  useEffect(() => {
+    if (spanData) {
+      updateSpanWithDetails(spanData);
+    }
+  }, [spanData]);
+  
+  // Update spanDetailsLoading based on isSpanLoading
+  useEffect(() => {
+    setSpanDetailsLoading(isSpanLoading);
+  }, [isSpanLoading]);
+  
+  // Helper function to update span with details
+  function updateSpanWithDetails(details: SpanDetails) {
+    // Update the selected span with the details
+    setSelectedSpan(prevSpan => {
+      if (!prevSpan) return null;
+      return {
+        ...prevSpan,
+        details
+      };
+    });
+    
+    // Also update the span in the spans array
+    setSpans(prevSpans => 
+      prevSpans.map(span => 
+        // Make sure we're checking against a valid span ID
+        (selectedSpan && span.span_id === selectedSpan.span_id)
+          ? { ...span, details } 
+          : span
+      )
+    );
+  }
 
   // Add the hook to prevent scroll propagation
   usePreventScrollPropagation();
@@ -703,151 +800,6 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
       }
     });
   }, [selectedSpan, activeTab]);
-
-  useEffect(() => {
-    async function fetchTraceData() {
-      try {
-        setLoading(true);
-        
-        // Fetch trace data from API
-        const response = await fetch(`/api/traces/${id}`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch trace: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        
-        // Extract trace metadata for the schema validation
-        const validatedData = schema.parse(data.trace);
-        setTrace(validatedData);
-        
-        // Set spans from the agents data
-        if (data.agents && Array.isArray(data.agents)) {
-          setSpans(data.agents);
-        
-        // Set the first span as selected by default if available
-          if (data.agents.length > 0) {
-            setSelectedSpan(data.agents[0]);
-        }
-        }
-        
-      } catch (err) {
-        console.error("Error fetching trace:", err);
-        setError(err instanceof Error ? err.message : "Failed to load trace data");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchTraceData();
-  }, [id]);
-
-  // Fetch span details whenever a span is selected
-  useEffect(() => {
-    async function fetchSpanDetails() {
-      if (!selectedSpan) return;
-      
-      // Skip if we already have the details
-      if (selectedSpan.details) return;
-      
-      try {
-        setSpanDetailsLoading(true);
-        
-        // First try a test endpoint to verify API routing is working
-        try {
-          const testResponse = await fetch('/api/traces/span/test');
-          const testData = await testResponse.json();
-          console.log("Test API response:", testData);
-        } catch (testError) {
-          console.error("Test API failed:", testError);
-        }
-        
-        console.log(`Fetching details for span: ${selectedSpan.span_id}`);
-        
-        try {
-          const response = await fetch(`/api/traces/span/${selectedSpan.span_id}`, {
-            method: 'GET',
-            headers: {
-              'Accept': 'application/json',
-            },
-          });
-          
-          if (!response.ok) {
-            console.error(`Error response from API: ${response.status} ${response.statusText}`);
-            throw new Error(`Failed to fetch span details: ${response.status} ${response.statusText}`);
-          }
-          
-          const details = await response.json();
-          console.log("Received span details:", details);
-          
-          // Update with real API data
-          updateSpanWithDetails(details);
-        } catch (apiError) {
-          console.error("API fetch failed, using mock data instead:", apiError);
-          
-          // Use mock data as fallback
-          const mockDetails = {
-            span_id: selectedSpan?.span_id || "unknown",
-            prompts: [
-              {
-                content: "Present this nicely: 1. Outdoor yoga or exercise session in a park\n2. Brunch at a rooftop restaurant or cafe\n3. Visit a botanical garden or outdoor art exhibition\n4. Take a leisurely walk around a lake or nature reserve\n5. Enjoy a picnic in a nearby park\n6. Go for a swim at a pool or visit a water park\n7. Visit an outdoor market or street fair\n8. Plan a day trip to a nearby hill station or scenic spot\n9. Have a barbecue or outdoor dinner with friends and family\n10. Attend an outdoor concert or music festival.",
-                id: 1,
-                message_index: 0,
-                role: "user",
-                span_id: selectedSpan?.span_id || "unknown"
-              }
-            ],
-            completions: [
-              {
-                content: selectedSpan?.final_completion || "Looking for some fun outdoor activities to enjoy the beautiful weather? Here are 10 great ideas to make the most of the sunshine.",
-                completion_tokens: 150,
-                finish_reason: "stop",
-                id: 1,
-                prompt_tokens: 100,
-                role: "assistant",
-                span_id: selectedSpan?.span_id || "unknown",
-                total_tokens: 250
-              }
-            ],
-            tools: []
-          };
-          
-          // Update with mock data
-          updateSpanWithDetails(mockDetails);
-        }
-      } catch (err) {
-        console.error("Error in fetchSpanDetails:", err);
-        // We don't set the global error state here to avoid disrupting the UI
-      } finally {
-        setSpanDetailsLoading(false);
-      }
-    }
-    
-    // Helper function to update span with details
-    function updateSpanWithDetails(details: SpanDetails) {
-      // Update the selected span with the details
-      setSelectedSpan(prevSpan => {
-        if (!prevSpan) return null;
-        return {
-          ...prevSpan,
-          details
-        };
-      });
-      
-      // Also update the span in the spans array
-      setSpans(prevSpans => 
-        prevSpans.map(span => 
-          // Make sure we're checking against a valid span ID
-          (selectedSpan && span.span_id === selectedSpan.span_id)
-            ? { ...span, details } 
-            : span
-        )
-      );
-    }
-    
-    fetchSpanDetails();
-  }, [selectedSpan?.span_id]);
 
   const backButton = (
     <Button 
@@ -900,7 +852,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
           )}
         </div>
         
-        {loading ? (
+        {isLoading ? (
           <div className="flex-1 overflow-auto">
             <TraceDetailSkeleton />
           </div>

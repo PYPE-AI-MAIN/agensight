@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { HeaderWrapper } from "@/components/HeaderWrapper";
+import { QueryProvider } from "@/components/QueryProvider";
 
 
 export default function RootLayout({
@@ -15,10 +16,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <HeaderWrapper>
-            {children}
-          </HeaderWrapper>
-          <Toaster />
+          <QueryProvider>
+            <HeaderWrapper>
+              {children}
+            </HeaderWrapper>
+            <Toaster />
+          </QueryProvider>
         </ThemeProvider>
       </body>
     </html>

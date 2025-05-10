@@ -23,18 +23,28 @@ import { toast } from "@/components/ui/use-toast"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TraceItem } from "@/hooks/use-trace-column"
 import { useTheme } from "@/components/ThemeProvider"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { getConfigVersions, getConfigByVersion, syncConfigToMain, commitConfigVersion, ConfigVersion } from "@/lib/services/config"
+import { updateAgent } from "@/lib/services/agents"
+import { getAllTraces } from "@/lib/services/traces"
+import type { Connection } from "@/lib/fallbackConfigs"
 
-interface ConfigVersion {
-  version: string;
-  commit_message: string;
-  timestamp: string;
-  is_current?: boolean;
+// Define types for config and agent
+interface Agent {
+  name: string;
+  // add other agent properties as needed
+}
+
+interface Config {
+  agents: Agent[];
+  connections?: Connection[];
+  // add other config properties as needed
 }
 
 export default function Page() {
   const { darkMode, toggleDarkMode } = useTheme();
-  const [config, setConfig] = useState<any>(null);
-  const [selectedAgent, setSelectedAgent] = useState<any>(null);
+  const [config, setConfig] = useState<Config | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [availableVersions, setAvailableVersions] = useState<ConfigVersion[]>([]);
@@ -61,164 +71,162 @@ export default function Page() {
   const [traces, setTraces] = useState<TraceItem[]>([]);
   const [tracesLoading, setTracesLoading] = useState(false);
 
-  useEffect(() => {
-    fetchConfigVersions(false);
-  }, []);
+  // Setup React Query client
+  const queryClient = useQueryClient();
+  
+  // Use React Query for fetching config versions
+  const { 
+    data: versionsData,
+    isLoading: versionsLoading,
+    error: versionsError,
+    refetch: refetchVersions
+  } = useQuery({
+    queryKey: ['config-versions'],
+    queryFn: getConfigVersions,
+  });
 
+  // Process versions data when it changes
   useEffect(() => {
-    if (activeTab === 'traces') {
-      fetchTraces();
-    }
-  }, [activeTab]);
-
-  const fetchConfigVersions = async (preserveCurrentSelection = false) => {
-    try {
-      setLoading(true);
-      
-      const currentSelection = preserveCurrentSelection ? selectedVersion : null;
-      
-      const timestamp = new Date().getTime();
-      const res = await fetch(`/api/config/versions?_t=${timestamp}`);
-      
-      if (!res.ok) {
-        throw new Error('Failed to fetch config versions');
-      }
-      
-      const versions = await res.json();
-      console.log('Received versions from API:', versions);
-      
-      const filteredVersions = versions.filter((v: ConfigVersion) => 
+    if (versionsData) {
+      const filteredVersions = versionsData.filter((v: ConfigVersion) => 
         v.version !== 'current' && v.version.match(/^\d+\.\d+\.\d+$/)
       );
-      console.log('Filtered versions for display:', filteredVersions);
       
       filteredVersions.sort((a: ConfigVersion, b: ConfigVersion) => {
         return b.version.localeCompare(a.version, undefined, { numeric: true });
       });
       
-      console.log('Sorted versions:', filteredVersions.map((v: ConfigVersion) => `${v.version} (${v.commit_message})`));
-      
       setAvailableVersions(filteredVersions);
       
-      if (filteredVersions.length > 0) {
-        if (preserveCurrentSelection && currentSelection && 
-            filteredVersions.some((v: ConfigVersion) => v.version === currentSelection)) {
-          console.log(`Preserving current selection: ${currentSelection}`);
-        } else {
-          const versionToSelect = filteredVersions[0].version;
-          console.log(`Selecting newest version: ${versionToSelect}`);
-          setSelectedVersion(versionToSelect);
-        }
+      if (filteredVersions.length > 0 && !selectedVersion) {
+        setSelectedVersion(filteredVersions[0].version);
       }
-    } catch (err) {
-      setError('Failed to load configuration versions');
-      console.error('Error fetching config versions:', err);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, [versionsData, selectedVersion]);
+  
+  // Use React Query for fetching config by version
+  const {
+    data: configData,
+    isLoading: configLoading,
+    error: configError
+  } = useQuery({
+    queryKey: ['config', selectedVersion],
+    queryFn: () => getConfigByVersion(selectedVersion),
+    enabled: !!selectedVersion,
+  });
 
+  // Update config state when data changes
   useEffect(() => {
-    if (!selectedVersion) return;
-    
-    const fetchConfig = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/config?version=${selectedVersion}`);
-        if (!res.ok) {
-          throw new Error('Failed to fetch config');
-        }
-        const data = await res.json();
-        setConfig(data);
-      } catch (err) {
-        setError('Failed to load configuration');
-        console.error('Error fetching config:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchConfig();
-  }, [selectedVersion]);
-
-  const handleAgentClick = useCallback((agentName: string) => {
-    if (!config?.agents) return;
-    
-    setSelectedAgent(null);
-    
-    setTimeout(() => {
-      const agent = config.agents.find((agent: any) => agent.name === agentName);
-      if (agent) {
-        setSelectedAgent({...agent});
-        setIsAgentModalOpen(true);
-      }
-    }, 10);
-  }, [config]);
-
-  const handleClearSelectedAgent = useCallback(() => {
-    setSelectedAgent(null);
-    setIsAgentModalOpen(false);
-  }, []);
-
-  const handleSyncToMain = async (version: string) => {
-    if (!version) return;
-    
-    try {
-      setLoading(true);
-      
-      const response = await fetch('/api/config/sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          version: version
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to sync to main config');
-      }
-
-      const result = await response.json();
-      console.log('Sync result:', result);
-      
+    if (configData) {
+      setConfig(configData as Config);
+    }
+  }, [configData]);
+  
+  // Use React Query for syncing config to main
+  const syncToMainMutation = useMutation({
+    mutationFn: syncConfigToMain,
+    onSuccess: () => {
       toast({
         title: "Success",
-        description: `Synced version ${version} to main config`,
+        description: `Synced version ${selectedVersion} to main config`,
         duration: 3000,
       });
-      
-      await fetchConfigVersions(true);
-      
-    } catch (error) {
-      console.error('Error syncing to main config:', error);
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['config-versions'] });
+    },
+    onError: (error) => {
       toast({
         title: "Error",
         description: "Failed to sync to main config",
         variant: "destructive",
         duration: 3000,
       });
-    } finally {
-      setLoading(false);
     }
-  };
-
-  const handleOpenCommitDialog = useCallback(() => {
-    setCommitMessage("");
-    setSyncToMain(true);
-    setIsCommitDialogOpen(true);
-  }, []);
+  });
   
-  const handleDialogOpenChange = useCallback((open: boolean) => {
-    setIsCommitDialogOpen(open);
-    if (!open) {
-      setCommitMessage("");
-      setSyncToMain(true);
+  // Use React Query for committing new config version
+  const commitVersionMutation = useMutation({
+    mutationFn: commitConfigVersion,
+    onSuccess: (result:any) => {
+      toast({
+        title: "Success",
+        description: `Created version ${result?.version as any}`,
+        duration: 3000,
+      });
+      
+      // Close the dialog
+      setIsCommitDialogOpen(false);
+      
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['config-versions'] });
+      
+      // Set the new version as selected
+      setSelectedVersion(result.version);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to commit new version",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
-  }, []);
+  });
+  
+  // Use React Query for updating agents
+  const updateAgentMutation = useMutation({
+    mutationFn: updateAgent,
+    onSuccess: (result, variables) => {
+      toast({
+        title: "Success",
+        description: `Agent updated successfully to version ${result.version}`,
+        duration: 3000,
+      });
+      
+      // Invalidate queries to refetch data
+      queryClient.invalidateQueries({ queryKey: ['config', result.version] });
+      
+      // Update the selected version if needed
+      if (result.version !== selectedVersion) {
+        setSelectedVersion(result.version);
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update agent",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  });
+  
+  // Use React Query for traces
+  const {
+    data: tracesData,
+    isLoading: tracesQueryLoading,
+    error: tracesError,
+    refetch: refetchTraces
+  } = useQuery({
+    queryKey: ['traces'],
+    queryFn: getAllTraces,
+    enabled: activeTab === 'traces',
+  });
 
-
+  // Update traces state when data changes
+  useEffect(() => {
+    if (tracesData) {
+      setTraces(tracesData);
+    }
+  }, [tracesData]);
+  
+  // Replace existing fetch function with mutation call
+  const handleSyncToMain = async (version: string) => {
+    if (!version) return;
+    syncToMainMutation.mutate(version);
+  };
+  
+  // Replace existing commit function with mutation call
   const handleCommit = async () => {
     if (!commitMessage.trim()) {
       toast({
@@ -239,182 +247,72 @@ export default function Page() {
       });
       return;
     }
-
-    try {
-      setIsCommitting(true);
-      
-      console.log(`Committing new version based on selected version: ${selectedVersion}`);
-      
-      const response = await fetch('/api/config/commit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          commit_message: commitMessage,
-          sync_to_main: syncToMain,
-          source_version: selectedVersion,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to commit changes');
-      }
-
-      const result = await response.json();
-      console.log('Commit result:', result);
-
-      setIsCommitDialogOpen(false);
-      
-      toast({
-        title: "Success",
-        description: `Created new version ${result.version} based on ${selectedVersion}`,
-        duration: 3000,
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      await fetchConfigVersions(false);
-      
-      if (result.version) {
-        setSelectedVersion(result.version);
-        
-        try {
-          const configRes = await fetch(`/api/config?version=${result.version}`);
-          if (configRes.ok) {
-            const updatedConfig = await configRes.json();
-            setConfig(updatedConfig);
-          }
-        } catch (configError) {
-          console.error('Error fetching new version config:', configError);
-        }
-      }
-    } catch (error) {
-      console.error('Error committing changes:', error);
-      toast({
-        title: "Error",
-        description: "Failed to commit changes",
-        variant: "destructive",
-        duration: 3000,
-      });
-    } finally {
-      setIsCommitting(false);
-    }
+    
+    commitVersionMutation.mutate({
+      commit_message: commitMessage,
+      sync_to_main: syncToMain,
+      source_version: selectedVersion
+    });
   };
-
-  const handleSaveAgent = async (updatedAgent: any) => {
-    try {
-      setLoading(true);
-      
-      console.log(`Saving agent to version: ${selectedVersion}`);
-      
-      if (!selectedVersion) {
-        toast({
-          title: "Error",
-          description: "No version selected to update",
-          variant: "destructive",
-          duration: 3000,
-        });
-        setLoading(false);
-        return;
-      }
-      
-      const payload = {
-        agent: updatedAgent,
-        commit_message: `Updated agent: ${updatedAgent.name}`,
-        sync_to_main: false,
-        version: selectedVersion,
-      };
-      
-      console.log('Update agent request payload:', JSON.stringify(payload, null, 2));
-      
-      const response = await fetch('/api/update_agent', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const responseText = await response.text();
-      console.log('Update agent raw response:', responseText);
-      
-      let result;
-      try {
-        result = JSON.parse(responseText);
-      } catch (e) {
-        throw new Error(`Failed to parse response: ${responseText}`);
-      }
-      
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update agent');
-      }
-
-      console.log('Update result:', result);
-      
-      if (result.version !== selectedVersion) {
-        console.warn(`Warning: Created new version ${result.version} instead of updating ${selectedVersion}`);
-      }
-      
-      toast({
-        title: "Success",
-        description: `Updated agent ${updatedAgent.name} in version ${result.version}`,
-        duration: 3000,
-      });
-      
-      const configRes = await fetch(`/api/config?version=${result.version}`);
-      if (configRes.ok) {
-        const updatedConfig = await configRes.json();
-        setConfig(updatedConfig);
-        
-        if (result.version !== selectedVersion) {
-          setSelectedVersion(result.version);
-          fetchConfigVersions();
-        }
-        
-        if (selectedAgent && selectedAgent.name === updatedAgent.name) {
-          setSelectedAgent(updatedAgent);
-        }
-      }
-      
-    } catch (error) {
-      console.error('Error updating agent:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update agent",
-        variant: "destructive",
-        duration: 3000,
-      });
-    } finally {
-      setLoading(false);
-    }
+  
+  // Replace existing saveAgent function with mutation call
+  const handleSaveAgent = async (updatedAgent: Agent) => {
+    updateAgentMutation.mutate({
+      agent: updatedAgent,
+      config_version: selectedVersion
+    });
   };
-
-  const fetchTraces = async () => {
-    try {
-      setTracesLoading(true);
-      const response = await fetch('/api/traces');
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch traces');
-      }
-      
-      const data = await response.json();
-      setTraces(data);
-    } catch (err) {
-      console.error('Error fetching traces:', err);
-      toast({
-        title: "Error",
-        description: "Failed to load traces",
-        variant: "destructive",
-        duration: 3000,
-      });
-    } finally {
-      setTracesLoading(false);
-    }
+  
+  // Replace the fetchTraces function with refetch
+  const fetchTraces = () => {
+    refetchTraces();
   };
+  
+  // Use React Query loading state for main loading state
+  const isLoading = versionsLoading || (configLoading && !!selectedVersion);
+  
+  useEffect(() => {
+    if (activeTab === 'traces') {
+      refetchTraces();
+    }
+  }, [activeTab, refetchTraces]);
+  
+  // Callback functions for handling UI interactions
+  const handleAgentClick = useCallback((agentName: string) => {
+    if (!config?.agents) return;
+    
+    setSelectedAgent(null);
+    
+    setTimeout(() => {
+      const agent = config.agents.find((agent: Agent) => agent.name === agentName);
+      if (agent) {
+        setSelectedAgent(agent);
+        setIsAgentModalOpen(true);
+      }
+    }, 10);
+  }, [config]);
 
-  if (loading && !config) {
+  const handleClearSelectedAgent = useCallback(() => {
+    setSelectedAgent(null);
+    setIsAgentModalOpen(false);
+  }, []);
+
+  const handleOpenCommitDialog = useCallback(() => {
+    setCommitMessage("");
+    setSyncToMain(true);
+    setIsCommitDialogOpen(true);
+  }, []);
+  
+  const handleDialogOpenChange = useCallback((open: boolean) => {
+    setIsCommitDialogOpen(open);
+    if (!open) {
+      setCommitMessage("");
+      setSyncToMain(true);
+    }
+  }, []);
+  
+  // Show loading state from React Query
+  if (isLoading && !config) {
     return (
       <SidebarProvider style={{ "--sidebar-width": "calc(var(--spacing) * 72)", "--header-height": "calc(var(--spacing) * 12)" } as React.CSSProperties}>
         <SidebarInset>
@@ -429,14 +327,14 @@ export default function Page() {
     );
   }
 
-  if (error) {
+  if (versionsError || configError) {
     return (
       <SidebarProvider style={{ "--sidebar-width": "calc(var(--spacing) * 72)", "--header-height": "calc(var(--spacing) * 12)" } as React.CSSProperties}>
         <SidebarInset>
           <SiteHeader />
           <div className="flex items-center justify-center h-screen">
             <div className="text-center">
-              <p className="text-red-500">{error}</p>
+              <p className="text-red-500">{versionsError?.message || configError?.message}</p>
             </div>
           </div>
         </SidebarInset>
@@ -506,7 +404,7 @@ export default function Page() {
                         variant="outline" 
                         size="sm" 
                         onClick={() => handleSyncToMain(selectedVersion)}
-                        disabled={loading}
+                        disabled={versionsLoading}
                         id="sync-button"
                         className="relative overflow-hidden group hover:border-primary/50 transition-all duration-300"
                       >
@@ -528,7 +426,7 @@ export default function Page() {
                         variant="outline" 
                         size="sm" 
                         onClick={handleOpenCommitDialog}
-                        disabled={loading}
+                        disabled={versionsLoading}
                       >
                         <IconGitCommit size={16} className="mr-1" />
                         Commit
@@ -548,7 +446,7 @@ export default function Page() {
               <div className="grid grid-cols-1 gap-6 mb-8">
                 <div className="relative">
                   <div className="rounded-lg border border-border/40 bg-card/50 backdrop-blur-sm p-2 h-[550px] overflow-hidden">
-                    {loading ? (
+                    {versionsLoading ? (
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
                       </div>
@@ -570,7 +468,7 @@ export default function Page() {
             
             {activeTab === "traces" && (
               <div className="border rounded-lg flex flex-col bg-card/50 backdrop-blur-sm h-[550px] pb-0">
-                {tracesLoading ? (
+                {tracesQueryLoading ? (
                   <div className="flex items-center justify-center h-full">
                     <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
                   </div>
@@ -607,7 +505,7 @@ export default function Page() {
         </div>
       </main>
 
-      <Dialog open={isCommitDialogOpen} onOpenChange={setIsCommitDialogOpen}>
+      <Dialog open={isCommitDialogOpen} onOpenChange={handleDialogOpenChange}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">Create New Version</DialogTitle>
@@ -646,10 +544,10 @@ export default function Page() {
               Cancel
             </Button>
             <Button 
-              disabled={isCommitting} 
+              disabled={versionsLoading} 
               onClick={handleCommit}
             >
-              {isCommitting ? (
+              {versionsLoading ? (
                 <>
                   <div className="mr-2 animate-spin h-4 w-4 border-2 border-background border-t-transparent rounded-full" />
                   Committing...
