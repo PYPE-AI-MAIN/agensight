@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@tailwind base;
+@tailwind components;
 
 @custom-variant dark (&:is(.dark *));
 
@@ -178,9 +180,7 @@
   }
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
 
 /* Custom utilities for the playground style */
 @layer utilities {
@@ -203,6 +203,36 @@
     to {
       stroke-dashoffset: 1000;
     }
+  }
+  
+  /* Custom scrollbar styles */
+  .scroll-container::-webkit-scrollbar,
+  pre::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .scroll-container::-webkit-scrollbar-track,
+  pre::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scroll-container::-webkit-scrollbar-thumb,
+  pre::-webkit-scrollbar-thumb {
+    background: var(--muted-foreground);
+    opacity: 0.5;
+    border-radius: 4px;
+  }
+  
+  .scroll-container::-webkit-scrollbar-thumb:hover,
+  pre::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
+  
+  /* Firefox scrollbar */
+  .scroll-container, pre {
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted-foreground) transparent;
   }
   
   /* Glass morphism effect for panels */
