@@ -41,7 +41,8 @@ interface Config {
   // add other config properties as needed
 }
 
-export default function Page() {
+export default function Dashboard() {
+  console.log("Dashboard Page component rendered");
   const { darkMode, toggleDarkMode } = useTheme();
   const [config, setConfig] = useState<Config | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
@@ -272,6 +273,7 @@ export default function Page() {
   const isLoading = versionsLoading || (configLoading && !!selectedVersion);
   
   useEffect(() => {
+    console.log("activeTab changed:", activeTab);
     if (activeTab === 'traces') {
       refetchTraces();
     }
@@ -341,6 +343,8 @@ export default function Page() {
       </SidebarProvider>
     );
   }
+
+  console.log("activeTab is", activeTab);
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -7,7 +7,7 @@ export interface ConfigVersion {
 }
 
 // API base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
+const API_BASE_URL = "http://0.0.0.0:5001/api";
 
 // Service functions using real API endpoints
 export async function getConfigVersions(): Promise<ConfigVersion[]> {

@@ -12,6 +12,9 @@ from starlette.middleware.wsgi import WSGIMiddleware
 from .routes.config import config_router, config_bp
 from .routes.trace import trace_router, trace_bp
 from .routes.prompt import prompt_router, prompt_bp
+from fastapi.responses import FileResponse
+
+
 
 # Import data migration utility
 from .migration_util import import_mock_data
@@ -35,6 +38,13 @@ app.add_middleware(
     expose_headers=["Content-Type", "Authorization"],
 )
 
+class NoCacheStaticFiles(StaticFiles):
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
 # Register FastAPI routes
 app.include_router(config_router, prefix="/api")
 app.include_router(trace_router, prefix="/api")
@@ -52,8 +62,11 @@ app.mount("/flask-compat", WSGIMiddleware(flask_app))
 
 # Serve static files
 static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../ui/out"))
-if os.path.exists(static_dir):
-    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+app.mount("/", NoCacheStaticFiles(directory=static_dir,html=True), name="static")
+
+@app.get("/")
+async def root():
+    return FileResponse(os.path.join(static_dir, "index.html"))
 
 @app.get("/health")
 async def health_check():
@@ -64,7 +77,8 @@ async def health_check():
 async def startup_event():
     """Run startup tasks"""
     logger.info("Server starting up...")
-    
+    logger.info("🚀 AgenSight is running! Open http://0.0.0.0:5001/dashboard in your browser.")
+
     # Initialize the configuration system (file-based only)
     try:
         from .utils.config_utils import initialize_config, ensure_version_directory
@@ -137,7 +151,7 @@ async def debug_data():
 
 def start_server():
     """Start the server"""
-    uvicorn.run("agensight.server.app:app", host="0.0.0.0", port=5001, log_level="info")
+    uvicorn.run("agensight.server.app:app", host="0.0.0.0", port=5001)
 
 if __name__ == "__main__":
     start_server()

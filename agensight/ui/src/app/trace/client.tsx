@@ -4,8 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TraceDetailPage from '@/components/trace-detail-page';
 
-// API base URL for the FastAPI backend
-const API_BASE_URL = 'http://localhost:5001';
 
 export default function TraceClient() {
   const searchParams = useSearchParams();

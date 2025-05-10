@@ -47,7 +47,7 @@ export interface Span {
 }
 
 // API base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
+const API_BASE_URL = "http://0.0.0.0:5001/api";
 
 // Service functions for API use
 export async function getTraceById(id: string): Promise<any> {
@@ -105,6 +105,7 @@ export async function getSpanDetailsById(spanId: string): Promise<SpanDetails> {
 
 // For future expansion - if you ever need to fetch all traces
 export async function getAllTraces(): Promise<any[]> {
+  console.log("getAllTraces CALLED");
   const maxRetries = 3;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {

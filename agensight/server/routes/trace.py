@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import JSONResponse
 from typing import Dict, List, Optional, Any
 from flask import Blueprint, jsonify, request
 
@@ -27,14 +28,14 @@ def list_traces():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@trace_router.get("/trace/{trace_id}/spans")
-def get_spans(trace_id: str):
-    try:
-        conn = get_db()
-        rows = conn.execute("SELECT * FROM spans WHERE trace_id = ? ORDER BY started_at", (trace_id,)).fetchall()
-        return [dict(row) for row in rows]
-    except sqlite3.DatabaseError as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @trace_router.get("/traces/{trace_id}/spans")
+# def get_spans(trace_id: str):
+#     try:
+#         conn = get_db()
+#         rows = conn.execute("SELECT * FROM spans WHERE trace_id = ? ORDER BY started_at", (trace_id,)).fetchall()
+#         return [dict(row) for row in rows]
+#     except sqlite3.DatabaseError as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
 @trace_router.get("/span/{span_id}/details")
@@ -54,7 +55,7 @@ def get_span_details(span_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@trace_router.get("/trace/{trace_id}/structured")
+@trace_router.get("/traces/{trace_id}/spans")
 def get_structured_trace(trace_id: str):
     try:
         conn = get_db()
