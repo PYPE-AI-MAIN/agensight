@@ -151,7 +151,7 @@ async def debug_data():
 
 def start_server():
     """Start the server"""
-    uvicorn.run("agensight.server.app:app", host="0.0.0.0", port=5001)
+    uvicorn.run("agensight.server.app:app", host="0.0.0.0", port=5001,log_level="info")
 
 if __name__ == "__main__":
     start_server()

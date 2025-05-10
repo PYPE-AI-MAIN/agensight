@@ -13,7 +13,7 @@ from .file_ops import read_config, write_config
 from typing import Dict, List, Any, Optional
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 # Constants
