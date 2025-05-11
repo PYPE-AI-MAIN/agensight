@@ -21,39 +21,70 @@ pip install agensight
 
 ## Quick Start
 
-### Initialize Agensight
+See the `examples/` folder for usage examples and scripts demonstrating Agensight features.
 
-```python
-from agensight import Agent
+## Installation (Development)
 
-# Create an agent
-agent = Agent("AnalysisAgent")
+Install all dependencies from the requirements file:
 
-# Set a prompt template with variables
-prompt_template = """
-Analyze the following {data_type} data: {data}
-"""
-
-# Use the agent with variable substitution
-prompt = agent.wrapper(
-    prompt_template=prompt_template,
-    values={
-        "data_type": "medical",
-        "data": "patient temperature: 98.6F, heart rate: 72bpm"
-    }
-)
-
-# Log interactions for later analysis
-output = "Analysis: Normal vital signs"
-agent.log_interaction(prompt, output)
+```bash
+pip install -r requirements.txt
 ```
 
-### Launch the Dashboard
+## Development & Local Setup
 
-   ```bash
-# Open the web dashboard
-agensight view
+To work on Agensight locally, follow these steps:
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/agensight.git
+cd agensight
 ```
+
+### 2. Set Up Python Environment
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 3. Set Up the UI (Frontend)
+```bash
+cd agensight/ui
+npm install
+npm run dev
+```
+This will start the UI on [http://localhost:5173](http://localhost:5173) (or similar).
+
+### 4. Run the Backend (FastAPI server)
+```bash
+cd agensight/server
+uvicorn app:app --reload
+```
+This will start the backend server on [http://localhost:8000](http://localhost:8000).
+
+### 5. Launch the Dashboard
+```bash
+python3 -m cli.main view
+```
+
+### 6. Inspecting the Database
+- The backend uses SQLite (default: `agensight/tracing/traces.db`).
+- To inspect the database, use the SQLite CLI:
+  ```bash
+  sqlite3 agensight/tracing/traces.db
+  .tables
+  SELECT * FROM traces LIMIT 5;
+  .exit
+  ```
+- Or use a GUI tool like [DB Browser for SQLite](https://sqlitebrowser.org/).
+
+### 7. Code Style & Linting
+- Python: Use `black` and `flake8` for formatting and linting.
+- TypeScript/JS: Use `eslint` and `prettier` in the `ui/` directory.
+
+### 8. Contributing
+- Please see the [contributing guidelines](./CONTRIBUTING.md) for more details.
 
 ## Configuration
 
@@ -85,10 +116,6 @@ For detailed documentation, please visit our [docs](./docs):
 - [API Reference](./docs/api-reference.md)
 - [Advanced Configuration](./docs/advanced-configuration.md)
 - [Examples](./examples/)
-
-## Contributing
-
-Contributions are welcome! Please read our [contributing guidelines](./CONTRIBUTING.md) to get started.
 
 ## License
 
