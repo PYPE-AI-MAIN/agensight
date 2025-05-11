@@ -24,7 +24,8 @@ def init_schema():
         name TEXT,
         started_at REAL,
         ended_at REAL,
-        metadata TEXT
+        metadata TEXT,
+        total_tokens INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS spans (

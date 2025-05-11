@@ -23,6 +23,7 @@ def list_traces():
     try:
         conn = get_db()
         rows = conn.execute("SELECT * FROM traces ORDER BY started_at DESC").fetchall()
+        print(rows) 
         return [dict(row) for row in rows]
     except sqlite3.DatabaseError as e:
         raise HTTPException(status_code=500, detail=str(e))

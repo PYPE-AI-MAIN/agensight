@@ -167,6 +167,7 @@ class DBSpanExporter(SpanExporter):
                     pass
 
             try:
+                print(trace_id, span.name, start, end, json.dumps({}))
                 conn.execute(
                     "INSERT OR IGNORE INTO traces (id,name,started_at,ended_at,metadata)"
                     " VALUES (?,?,?,?,?)",
@@ -183,8 +184,8 @@ class DBSpanExporter(SpanExporter):
                         str(span.status.status_code), json.dumps(attrs)
                     )
                 )
-            except:
-                pass
+            except Exception as e:
+                print(f"Error inserting trace: {e}")
 
             nio = attrs.get("gen_ai.normalized_input_output")
             if nio:
@@ -211,8 +212,8 @@ class DBSpanExporter(SpanExporter):
                         )
                         if c["total_tokens"]:
                             total_tokens_by_trace[trace_id] += int(c["total_tokens"])
-                except:
-                    pass
+                except Exception as e:
+                    print(f"Error inserting span: {e}")
 
             try:
                 for i in range(5):
@@ -224,14 +225,14 @@ class DBSpanExporter(SpanExporter):
                         "INSERT INTO tools (span_id,name,arguments) VALUES (?,?,?)",
                         (span_id, name, args)
                     )
-            except:
-                pass
+            except Exception as e:
+                print(f"Error inserting tool: {e}")
 
         try:
             for tid, tot in total_tokens_by_trace.items():
                 conn.execute("UPDATE traces SET total_tokens=? WHERE id=?", (tot, tid))
             conn.commit()
-        except:
-            pass
+        except Exception as e:
+            print(f"Error updating total_tokens: {e}")
 
         return SpanExportResult.SUCCESS

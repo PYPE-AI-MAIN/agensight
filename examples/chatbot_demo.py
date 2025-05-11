@@ -4,7 +4,7 @@ from agensight.tracing import setup_tracing, get_tracer, start_span, enable_sess
 from agensight.integrations import instrument_openai
 
 # Setup
-setup_tracing("chatbot-demo")
+setup_tracing("chatbot-demo",exporter_type="db")
 # enable_session_tracking()
 # set_session_id("user-session-xyz")
 instrument_openai()
