@@ -1,3 +1,0 @@
-agensight
-cli
-tests

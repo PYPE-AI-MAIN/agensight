@@ -36,7 +36,7 @@ export const columns: ColumnDef<TraceItem>[] = [
         </div>
       </div>
     ),
-    size: 100,
+    size: 320,
   },
   {
     accessorKey: "name",
@@ -45,18 +45,6 @@ export const columns: ColumnDef<TraceItem>[] = [
       <div className="w-full text-base overflow-hidden text-ellipsis">
         <div className="truncate">
           {row.original.name}
-        </div>
-      </div>
-    ),
-    size: 200,
-  },
-  {
-    accessorKey: "session_id",
-    header: "Session ID",
-    cell: ({ row }) => (
-      <div className="w-full text-base overflow-hidden text-ellipsis">
-        <div className="truncate">
-          {row.original.session_id}
         </div>
       </div>
     ),
