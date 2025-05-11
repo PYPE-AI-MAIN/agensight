@@ -688,6 +688,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
     queryFn: () => getTraceById(id)
   });
   
+
   // Process trace data when it changes
   useEffect(() => {
     if (traceData) {
@@ -702,10 +703,11 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
           session_id: "session",
           started_at: (traceData.agents?.[0]?.start_time || Date.now() / 1000).toString(),
           ended_at: (traceData.agents?.[traceData.agents.length - 1]?.end_time || Date.now() / 1000).toString(),
-          metadata: JSON.stringify({
-            trace_input: traceData.trace_input,
-            trace_output: traceData.trace_output
-          })
+          trace_input: traceData.trace_input,
+          trace_output: traceData.trace_output,
+          metadata: {
+            trace_id: traceData.trace_id
+          }
         });
         
         // Set spans from the agents data
@@ -932,8 +934,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                 <span className="text-sm font-medium">User</span>
                               </div>
                               <div className="whitespace-pre-wrap pl-8 text-sm">
-                                I need information about the weather in New York and the latest news about technology.
-                                Also, can you help me plan a day trip to the city?
+                                {trace.trace_input}
                               </div>
                             </CardContent>
                           </Card>
@@ -957,21 +958,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                 <span className="text-sm font-medium">Assistant</span>
                               </div>
                               <div className="whitespace-pre-wrap pl-8 text-sm">
-                                Today in New York, it's 68°F and partly cloudy with a 20% chance of rain in the afternoon.
-                                
-                                For the latest tech news, Apple just announced their new iPhone 15 with improved camera capabilities and longer battery life. Microsoft released a major Windows update with new AI features, and Tesla unveiled plans for a more affordable electric vehicle.
-                                
-                                Here's a suggested day trip itinerary for New York City:
-                                
-                                9:00 AM - Start with breakfast at a local cafe in Greenwich Village
-                                10:30 AM - Visit the Metropolitan Museum of Art
-                                1:00 PM - Grab lunch at Chelsea Market
-                                2:30 PM - Take a walk on the High Line
-                                4:00 PM - Visit the One World Observatory for panoramic views
-                                6:00 PM - Dinner in Little Italy
-                                8:00 PM - Catch a Broadway show (if available)
-                                
-                                Would you like me to recommend specific restaurants or exhibits at the museum?
+                                {trace.trace_output}
                               </div>
                             </CardContent>
                           </Card>

@@ -18,10 +18,12 @@ import { z } from "zod";
 export const schema = z.object({
   id: z.number(),
   ended_at: z.string(),
-  metadata: z.string(),
   name: z.string(),
   session_id: z.string(),
   started_at: z.string(),
+  trace_input: z.string(),
+  trace_output: z.string(),
+  metadata: z.any(),
 });
 
 export type TraceItem = z.infer<typeof schema>;
