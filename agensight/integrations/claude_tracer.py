@@ -1,13 +1,13 @@
-# agentsight/instrumentation/claude.py
-
+from anthropic._types import NOT_GIVEN
 from anthropic import Anthropic
+from anthropic.resources.messages import Messages
 from opentelemetry import trace
 import functools
 
 _is_patched = False
 tracer = trace.get_tracer("claude")
 
-def _wrap_messages_create(original_create):
+def _wrap_create(original_create):
     @functools.wraps(original_create)
     def wrapper(self, *args, **kwargs):
         model = kwargs.get("model", "claude-3")
@@ -25,12 +25,23 @@ def _wrap_messages_create(original_create):
 
             response = original_create(self, *args, **kwargs)
 
-            usage = getattr(response, "usage", {})
-            span.set_attribute("llm.usage.total_tokens", usage.get("total_tokens"))
-            span.set_attribute("gen_ai.usage.prompt_tokens", usage.get("input_tokens"))
-            span.set_attribute("gen_ai.usage.completion_tokens", usage.get("output_tokens"))
+            usage = getattr(response, "usage", None)
+            if usage:
+                total_tokens = getattr(usage, "total_tokens", None)
+                prompt_tokens = getattr(usage, "input_tokens", None)
+                completion_tokens = getattr(usage, "output_tokens", None)
 
-            if hasattr(response, "content") and response.content:
+                if total_tokens is not None:
+                    span.set_attribute("llm.usage.total_tokens", total_tokens)
+                if prompt_tokens is not None:
+                    span.set_attribute("gen_ai.usage.prompt_tokens", prompt_tokens)
+                if completion_tokens is not None:
+                    span.set_attribute("gen_ai.usage.completion_tokens", completion_tokens)
+
+
+
+            # Claude 3 structure: response.content = [ContentBlock]
+            if hasattr(response, "content") and isinstance(response.content, list) and response.content:
                 span.set_attribute("gen_ai.completion.0.role", "assistant")
                 span.set_attribute("gen_ai.completion.0.content", response.content[0].text)
 
@@ -44,7 +55,7 @@ def instrument_anthropic():
     if _is_patched:
         return
     try:
-        Anthropic.messages.create = _wrap_messages_create(Anthropic.messages.create)
+        Messages.create = _wrap_create(Messages.create)
         _is_patched = True
-    except Exception as e:
-        return
+    except Exception:
+        pass
