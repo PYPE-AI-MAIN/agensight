@@ -7,7 +7,7 @@ from openai import OpenAI
 import os
 
 # === Setup tracing and OpenAI ===
-init(name="langgraph-joke", exporter_type="db")  # or "console"
+init(name="langgraph-joke")  # or "console"
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # === LangGraph State ===
 class State(TypedDict):
