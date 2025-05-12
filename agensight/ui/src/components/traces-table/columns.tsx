@@ -54,11 +54,12 @@ export const columns: ColumnDef<TraceItem>[] = [
     accessorKey: "latency",
     header: "Latency",
     cell: ({ row }) => {
-      const timeDifferenceSec = Number(row.original.ended_at) - Number(row.original.started_at);
+      const timeDifferenceMs = new Date(row.original.ended_at).getTime() - new Date(row.original.started_at).getTime();
+      
       return (
         <div className="w-full text-base overflow-hidden text-ellipsis">
           <div className="truncate">
-            {(timeDifferenceSec.toFixed(2))}s
+            {Math.floor(timeDifferenceMs / 1000)}s
           </div>
         </div>
       );

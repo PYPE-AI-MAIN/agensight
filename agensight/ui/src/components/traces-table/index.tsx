@@ -60,24 +60,19 @@ function DraggableRow({ row, onRowClick }: { row: Row<TraceItem>; onRowClick: (i
       data-state={row.getIsSelected() && "selected"}
       data-dragging={isDragging}
       ref={setNodeRef}
-      className={cn(
-        "relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80",
-        "hover:bg-primary/5 even:bg-muted/30 transition-colors cursor-pointer",
-        isDragging && "shadow-lg scale-[1.01] ring-2 ring-primary rounded-xl"
-      )}
+      className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80 hover:bg-muted cursor-pointer"
       style={{
         transform: CSS.Transform.toString(transform),
         transition: transition,
       }}
       onClick={handleRowClick}
-      tabIndex={0}
     >
       {row.getVisibleCells().map((cell, i) => (
         <td
           key={cell.id}
           className={cn(
-            "px-4 py-3 align-middle whitespace-nowrap overflow-hidden text-base border-b focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
-            i === 0 && "sticky left-0 z-10 bg-background"
+            "px-4 py-3 align-middle whitespace-nowrap overflow-hidden text-base border-b",
+            i === 0 && "sticky left-0 z-10 bg-background" // Make first column sticky
           )}
           style={{ 
             width: cell.column.getSize() !== 150 ? `${cell.column.getSize()}px` : undefined,
@@ -174,6 +169,13 @@ export function TracesTable({
         value="outline"
         className="relative flex flex-col h-full"
       >
+        <DndContext
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis]}
+          onDragEnd={handleDragEnd}
+          sensors={sensors}
+          id={sortableId}
+        >
           <div className="flex flex-col w-full h-full">
             {/* Table container with sticky header */}
             <div className="w-full flex-1 overflow-hidden flex flex-col">
@@ -190,15 +192,13 @@ export function TracesTable({
                               {headerGroup.headers.map((header, i) => (
                                 <th
                                   key={header.id}
-                                  scope="col"
                                   className={cn(
-                                    "text-base font-semibold px-4 py-3 text-left whitespace-nowrap border-b bg-muted/60",
-                                    i === 0 && "sticky left-0 z-20 bg-muted"
+                                    "text-base font-semibold px-4 py-3 text-left whitespace-nowrap border-b",
+                                    i === 0 && "sticky left-0 z-20 bg-muted" // Make first column sticky
                                   )}
                                   style={{ 
                                     width: header.getSize() !== 150 ? `${header.getSize()}px` : undefined,
                                   }}
-                                  tabIndex={0}
                                 >
                                   {header.isPlaceholder
                                     ? null
@@ -234,12 +234,9 @@ export function TracesTable({
                           <tr>
                             <td
                               colSpan={table.getAllColumns().length}
-                              className="h-24 text-center border-b text-muted-foreground"
+                              className="h-24 text-center border-b"
                             >
-                              <span className="inline-flex items-center gap-2">
-
-                                No results found.
-                              </span>
+                              No results.
                             </td>
                           </tr>
                         )}
@@ -254,6 +251,10 @@ export function TracesTable({
           {/* Pagination footer - make it sticky at the bottom */}
           <div className="bg-background py-2 px-4 flex-shrink-0 sticky bottom-0 z-10 shadow-[0_-2px_10px_rgba(0,0,0,0.1)] dark:shadow-[0_-2px_10px_rgba(0,0,0,0.25)]">
             <div className="flex items-center justify-between">
+              <div className="text-muted-foreground text-base">
+                {table.getFilteredSelectedRowModel().rows.length} of{" "}
+                {table.getFilteredRowModel().rows.length} row(s) selected.
+              </div>
               <div className="flex items-center gap-8 ml-auto">
                 <div className="flex items-center gap-2">
                   <Label htmlFor="rows-per-page" className="text-base font-medium">
@@ -324,6 +325,7 @@ export function TracesTable({
               </div>
             </div>
           </div>
+        </DndContext>
       </TabsContent>
     </Tabs>
   );
