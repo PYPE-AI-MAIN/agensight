@@ -6,6 +6,7 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from .db import get_db
 from agensight.tracing.utils import parse_normalized_io_for_span
 
+# Regex patterns to find token counts in stringified attributes.
 TOKEN_PATTERNS = [
     r'"total_tokens":\s*(\d+)',
     r'"completion_tokens":\s*(\d+)',
@@ -20,12 +21,14 @@ TOKEN_PATTERNS = [
 ]
 
 def extract_token_counts_from_attrs(attrs, span_id, span_name):
+    """Extracts token counts (total, prompt, completion) from span attributes."""
     tokens = {
         "total": attrs.get("llm.usage.total_tokens") or attrs.get("gen_ai.usage.total_tokens"),
         "prompt": attrs.get("gen_ai.usage.prompt_tokens"),
         "completion": attrs.get("gen_ai.usage.completion_tokens")
     }
 
+    # Attempt to find token counts in numeric attribute values.
     for key, value in attrs.items():
         if isinstance(value, (int, float)) and ('token' in key.lower() or 'usage' in key.lower()):
             if 'prompt' in key.lower() and tokens["prompt"] is None:
@@ -35,9 +38,11 @@ def extract_token_counts_from_attrs(attrs, span_id, span_name):
             elif 'total' in key.lower() and tokens["total"] is None:
                 tokens["total"] = value
 
+    # Attempt to find token counts in stringified JSON or by regex in string attributes.
     for key, value in attrs.items():
         if isinstance(value, str):
             try:
+                # Check for JSON-like strings.
                 if '{' in value or '[' in value:
                     try:
                         parsed = json.loads(value)
@@ -51,8 +56,9 @@ def extract_token_counts_from_attrs(attrs, span_id, span_name):
                                     elif 'total' in token_key.lower() and tokens["total"] is None:
                                         tokens["total"] = token_val
                     except json.JSONDecodeError:
-                        pass
+                        pass # Ignore if not valid JSON.
 
+                # Apply regex patterns if tokens still not found.
                 for pattern in TOKEN_PATTERNS:
                     matches = re.search(pattern, value)
                     if matches:
@@ -64,8 +70,9 @@ def extract_token_counts_from_attrs(attrs, span_id, span_name):
                         elif 'total' in pattern and tokens["total"] is None:
                             tokens["total"] = found_value
             except:
-                pass
+                pass # Ignore errors during string parsing.
 
+    # Infer missing token counts if two out of three are present.
     if tokens["total"] is not None and tokens["completion"] is None and tokens["prompt"] is not None:
         tokens["completion"] = int(tokens["total"]) - int(tokens["prompt"])
     elif tokens["total"] is not None and tokens["prompt"] is None and tokens["completion"] is not None:
@@ -76,15 +83,17 @@ def extract_token_counts_from_attrs(attrs, span_id, span_name):
     return tokens
 
 def _make_io_from_openai_attrs(attrs: dict, span_id: str, span_name: str) -> str | None:
+    """Constructs normalized input/output JSON string from OpenAI-like span attributes."""
     has_prompt = any('prompt' in k.lower() or 'input' in k.lower() for k in attrs)
 
     if not has_prompt:
-        return None
+        return None # Not an LLM-like span if no prompt/input attributes.
 
     prompts, completions = [], []
     i = 0
     found_prompts = False
 
+    # Extract structured prompts (gen_ai.prompt.<i>.role/content).
     while f"gen_ai.prompt.{i}.role" in attrs or f"gen_ai.prompt.{i}.content" in attrs:
         role = attrs.get(f"gen_ai.prompt.{i}.role", "user")
         content = attrs.get(f"gen_ai.prompt.{i}.content", "")
@@ -92,6 +101,7 @@ def _make_io_from_openai_attrs(attrs: dict, span_id: str, span_name: str) -> str
         found_prompts = True
         i += 1
 
+    # Fallback for less structured prompt/input attributes.
     if not found_prompts:
         input_value = next(
             (attrs[k] for k in attrs if 'input' in k.lower() or 'prompt' in k.lower() and attrs[k]),
@@ -100,9 +110,11 @@ def _make_io_from_openai_attrs(attrs: dict, span_id: str, span_name: str) -> str
         if input_value:
             prompts.append({"role": "user", "content": str(input_value)})
 
+    # Default prompt if none found.
     if not prompts:
         prompts.append({"role": "user", "content": f"[Input for span {span_id}]"})
 
+    # Extract output content.
     output_content = next(
         (attrs[k] for k in attrs if 'completion' in k.lower() and '.content' in k.lower()),
         None
@@ -125,7 +137,9 @@ def _make_io_from_openai_attrs(attrs: dict, span_id: str, span_name: str) -> str
     return json.dumps({"prompts": prompts, "completions": completions})
 
 class DBSpanExporter(SpanExporter):
+    """Exports OpenTelemetry spans to a SQLite database."""
     def export(self, spans):
+        """Processes and stores a batch of spans in the database."""
         conn = get_db()
         total_tokens_by_trace = defaultdict(int)
 
@@ -135,25 +149,28 @@ class DBSpanExporter(SpanExporter):
             span_id   = format(ctx.span_id,  "016x")
             parent_id = format(span.parent.span_id, "016x") if span.parent else None
 
-            start = span.start_time / 1e9
-            end   = span.end_time   / 1e9
+            start = span.start_time / 1e9 # Convert ns to s.
+            end   = span.end_time   / 1e9   # Convert ns to s.
             dur   = end - start
             attrs = dict(span.attributes)
 
+            # Heuristic to identify potential LLM spans for I/O normalization.
             is_potential_llm_span = any(
                 key in str(attrs) or key in span.name.lower()
                 for key in ["gen_ai", "openai", "llm", "compl", "token", "prompt"]
             )
 
+            # Attempt to create/normalize I/O data if not already present or needs token update.
             if "gen_ai.normalized_input_output" not in attrs and is_potential_llm_span:
                 nio = _make_io_from_openai_attrs(attrs, span_id, span.name)
                 if nio:
                     attrs["gen_ai.normalized_input_output"] = nio
-            else:
+            else: # If I/O exists, ensure token counts are populated.
                 try:
                     nio_data = json.loads(attrs["gen_ai.normalized_input_output"])
                     if nio_data and "completions" in nio_data and nio_data["completions"]:
                         completion = nio_data["completions"][0]
+                        # If any token count is missing, try to extract them all.
                         if any(completion.get(k) is None for k in ["total_tokens", "prompt_tokens", "completion_tokens"]):
                             tokens = extract_token_counts_from_attrs(attrs, span_id, span.name)
                             completion.update({
@@ -173,6 +190,7 @@ class DBSpanExporter(SpanExporter):
                     " VALUES (?,?,?,?,?)",
                     (trace_id, span.name, start, end, json.dumps({}))
                 )
+                # Insert span record.
                 conn.execute(
                     "INSERT INTO spans"
                     " (id, trace_id, parent_id, name, started_at, ended_at, duration,"
@@ -187,6 +205,7 @@ class DBSpanExporter(SpanExporter):
             except Exception as e:
                 print(f"Error inserting trace: {e}")
 
+            # Insert prompts and completions if normalized I/O is present.
             nio = attrs.get("gen_ai.normalized_input_output")
             if nio:
                 try:

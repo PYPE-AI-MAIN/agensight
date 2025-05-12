@@ -9,17 +9,15 @@ from agensight.tracing import get_tracer
 from agensight.tracing.session import is_session_enabled, get_session_id
 
 def trace(name: Optional[str] = None, **default_attributes):
-    """
-    Lightweight span wrapper for quick instrumentation.
-    """
+    """Basic OpenTelemetry span decorator for general tracing."""
     def decorator(func: Callable):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            tracer_name = name or func.__module__
+            tracer_name = name or func.__module__ # Default to function's module name.
             tracer_instance = get_tracer(tracer_name)
 
             attributes = default_attributes.copy()
-            if is_session_enabled():
+            if is_session_enabled(): # Add session ID if enabled.
                 attributes.setdefault("session.id", get_session_id())
 
             with tracer_instance.start_as_current_span(
@@ -32,29 +30,29 @@ def trace(name: Optional[str] = None, **default_attributes):
 
 
 def _extract_usage_from_result(result: Any) -> Optional[Dict[str, int]]:
-    """
-    Return {total_tokens, prompt_tokens, completion_tokens} or None.
-    """
+    """Extracts LLM token usage (total, prompt, completion) from various result structures."""
     if result is None:
         return None
 
+    # Check dict for 'usage' key.
     if isinstance(result, dict):
         usage = result.get("usage")
         if isinstance(usage, dict):
             return usage
 
+    # Check object for 'usage' attribute (common in SDKs).
     usage = getattr(result, "usage", None)
     if usage is not None:
-        if hasattr(usage, "to_dict"):
+        if hasattr(usage, "to_dict"): # Handles objects with a to_dict method.
             return usage.to_dict()
         if isinstance(usage, dict):
             return usage
+        # Fallback for direct token attributes on usage object.
         return {
             "total_tokens": getattr(usage, "total_tokens", None),
             "prompt_tokens": getattr(usage, "prompt_tokens", None),
             "completion_tokens": getattr(usage, "completion_tokens", None),
         }
-
     return None
 
 
@@ -65,20 +63,24 @@ def normalize_input_output(
     fallback_output: Optional[Any],
     extra_attributes: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, List[Dict[str, Any]]]:
+    """Normalizes LLM inputs/outputs into a structured {prompts: [], completions: []} format."""
     result = {"prompts": [], "completions": []}
     extra = extra_attributes or {}
 
     def _safe_stringify(value):
+        """Safely stringifies a value, using JSON for dicts/lists."""
         try:
             return json.dumps(value) if isinstance(value, (dict, list)) else str(value)
         except Exception:
             return str(value)
 
+    # Prioritize explicit, then fallback for input.
     if explicit_input is not None:
         result["prompts"].append({"role": "user", "content": _safe_stringify(explicit_input)})
     elif fallback_input:
         result["prompts"].append({"role": "user", "content": _safe_stringify(fallback_input)})
 
+    # Prioritize explicit, then fallback for output. Include token usage if available.
     if explicit_output is not None or fallback_output is not None:
         content = explicit_output or fallback_output
         completion = {
@@ -97,9 +99,10 @@ def normalize_input_output(
 def span(
     name: Optional[str] = None,
     metadata: Optional[Dict[str, Any]] = None,
-    input: Optional[Any] = None,
-    output: Optional[Any] = None,
+    input: Optional[Any] = None, # Explicit LLM input
+    output: Optional[Any] = None, # Explicit LLM output
 ):
+    """Decorator for LLM interactions, creating a span with I/O, metadata, and token usage."""
     tracer = ot_trace.get_tracer("default")
 
     def decorator(func: Callable):
@@ -111,26 +114,29 @@ def span(
                 attributes["session.id"] = get_session_id()
 
             with tracer.start_as_current_span(span_name, attributes=attributes) as span_obj:
-                fallback_input = args or kwargs
+                fallback_input = args or kwargs # Infer input if not explicit.
                 result = None
 
                 try:
                     result = func(*args, **kwargs)
                 except Exception as e:
+                    # On error, record input and error status.
                     io_data = normalize_input_output(
-                        input, output, fallback_input, None,
+                        input, output, fallback_input, None, # No output on error.
                         extra_attributes=span_obj.attributes,
                     )
                     span_obj.set_attribute("gen_ai.normalized_input_output", json.dumps(io_data))
                     span_obj.set_status(Status(StatusCode.ERROR, str(e)))
                     raise
 
+                # Extract token usage if available from the result.
                 usage = _extract_usage_from_result(result)
                 if usage:
                     span_obj.set_attribute("llm.usage.total_tokens", usage.get("total_tokens"))
                     span_obj.set_attribute("gen_ai.usage.prompt_tokens", usage.get("prompt_tokens"))
                     span_obj.set_attribute("gen_ai.usage.completion_tokens", usage.get("completion_tokens"))
 
+                # Record normalized input/output.
                 io_data = normalize_input_output(
                     input, output, fallback_input, result,
                     extra_attributes=span_obj.attributes,
