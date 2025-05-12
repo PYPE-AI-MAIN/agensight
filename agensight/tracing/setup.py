@@ -11,6 +11,8 @@ def setup_tracing(service_name="default", exporter_type=None):
     from agensight.tracing.db import init_schema
     if exporter_type == "db":
         init_schema()
+    else:
+        print("DB not initialized")
 
     exporter = get_exporter(exporter_type)
     processor = BatchSpanProcessor(exporter)
@@ -19,4 +21,5 @@ def setup_tracing(service_name="default", exporter_type=None):
     provider.add_span_processor(processor)
     trace.set_tracer_provider(provider)
     return trace.get_tracer(service_name)
+
 

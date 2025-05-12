@@ -66,11 +66,15 @@ def extract_token_counts_from_attrs(attrs, span_id, span_name):
 
     return tokens
 
+<<<<<<< HEAD
+def _make_io_from_openai_attrs(attrs, span_id, span_name):
+=======
 def _make_io_from_openai_attrs(attrs: dict, span_id: str, span_name: str) -> str | None:
     has_prompt = any('prompt' in k.lower() or 'input' in k.lower() for k in attrs)
     if not has_prompt:
         return None
 
+>>>>>>> prompt-config
     prompts, completions = [], []
     i = 0
     while f"gen_ai.prompt.{i}.role" in attrs or f"gen_ai.prompt.{i}.content" in attrs:
@@ -111,6 +115,8 @@ class DBSpanExporter(SpanExporter):
 
         for span in spans:
             ctx = span.get_span_context()
+<<<<<<< HEAD
+=======
             trace_id = format(ctx.trace_id, "032x")
             span_id = format(ctx.span_id, "016x")
             parent_id = format(span.parent.span_id, "016x") if span.parent else None
@@ -118,6 +124,7 @@ class DBSpanExporter(SpanExporter):
             start = span.start_time / 1e9
             end = span.end_time / 1e9
             dur = end - start
+>>>>>>> prompt-config
             attrs = dict(span.attributes)
             trace_id = attrs.get("trace_id") or format(ctx.trace_id, "032x")
             span_id = format(ctx.span_id, "016x")
@@ -132,6 +139,16 @@ class DBSpanExporter(SpanExporter):
                 attrs["gen_ai.normalized_input_output"] = _make_io_from_openai_attrs(attrs, span_id, span.name)
 
             try:
+<<<<<<< HEAD
+                if parent_id is None:
+                    conn.execute(
+                        "INSERT OR IGNORE INTO traces (id, name, started_at, ended_at, metadata) VALUES (?, ?, ?, ?, ?)",
+                        (trace_id, attrs.get("trace.name", span.name), start, end, json.dumps({}))
+                    )
+
+                conn.execute(
+                    "INSERT INTO spans (id, trace_id, parent_id, name, started_at, ended_at, duration, kind, status, attributes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+=======
                 session_id = attrs.get("session.id")
                 if session_id:
                     try:
@@ -160,13 +177,19 @@ class DBSpanExporter(SpanExporter):
                     " (id, trace_id, parent_id, name, started_at, ended_at, duration,"
                     "  kind, status, attributes)"
                     " VALUES (?,?,?,?,?,?,?,?,?,?)",
+>>>>>>> prompt-config
                     (
                         span_id, trace_id, parent_id, span.name, start, end, duration,
                         str(span.kind), str(span.status.status_code), json.dumps(attrs)
                     )
                 )
+<<<<<<< HEAD
+            except Exception:
+                continue
+=======
             except:
                 pass
+>>>>>>> prompt-config
 
             try:
                 nio = attrs.get("gen_ai.normalized_input_output")
@@ -183,8 +206,13 @@ class DBSpanExporter(SpanExporter):
                                      ))
                         if c["total_tokens"]:
                             total_tokens_by_trace[trace_id] += int(c["total_tokens"])
-            except:
+<<<<<<< HEAD
+            except Exception:
                 pass
+=======
+                except:
+                    pass
+>>>>>>> prompt-config
 
             try:
                 for i in range(5):
@@ -192,18 +220,28 @@ class DBSpanExporter(SpanExporter):
                     if not name:
                         break
                     args = attrs.get(f"gen_ai.completion.0.tool_calls.{i}.arguments")
+<<<<<<< HEAD
+                    conn.execute("INSERT INTO tools (span_id, name, arguments) VALUES (?, ?, ?)",
+                                 (span_id, name, args))
+            except Exception:
+=======
                     conn.execute(
                         "INSERT INTO tools (span_id,name,arguments) VALUES (?,?,?)",
                         (span_id, name, args)
                     )
             except:
+>>>>>>> prompt-config
                 pass
 
         try:
             for trace_id, total in total_tokens_by_trace.items():
                 conn.execute("UPDATE traces SET total_tokens=? WHERE id=?", (total, trace_id))
             conn.commit()
+<<<<<<< HEAD
+        except Exception:
+=======
         except:
+>>>>>>> prompt-config
             pass
 
         return SpanExportResult.SUCCESS

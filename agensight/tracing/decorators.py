@@ -161,6 +161,9 @@ def span(
                 prompt = usage.get("prompt_tokens") if usage else None
                 completion = usage.get("completion_tokens") if usage else None
 
+<<<<<<< HEAD
+                io_data = normalize_input_output(input, output, fallback_input, result, span_obj.attributes)
+=======
                 # Fill missing total from prompt + completion
                 if total is None and prompt is not None and completion is not None:
                     total = prompt + completion
@@ -178,6 +181,7 @@ def span(
                     input, output, fallback_input, result,
                     extra_attributes=span_obj.attributes,
                 )
+>>>>>>> prompt-config
                 span_obj.set_attribute("gen_ai.normalized_input_output", json.dumps(io_data))
 
                 return result
