@@ -77,7 +77,6 @@ def extract_token_counts_from_attrs(attrs, span_id, span_name):
 
 def _make_io_from_openai_attrs(attrs: dict, span_id: str, span_name: str) -> str | None:
     has_prompt = any('prompt' in k.lower() or 'input' in k.lower() for k in attrs)
-
     if not has_prompt:
         return None
 
@@ -130,14 +129,14 @@ class DBSpanExporter(SpanExporter):
         total_tokens_by_trace = defaultdict(int)
 
         for span in spans:
-            ctx       = span.get_span_context()
-            trace_id  = format(ctx.trace_id, "032x")
-            span_id   = format(ctx.span_id,  "016x")
+            ctx = span.get_span_context()
+            trace_id = format(ctx.trace_id, "032x")
+            span_id = format(ctx.span_id, "016x")
             parent_id = format(span.parent.span_id, "016x") if span.parent else None
 
             start = span.start_time / 1e9
-            end   = span.end_time   / 1e9
-            dur   = end - start
+            end = span.end_time / 1e9
+            dur = end - start
             attrs = dict(span.attributes)
 
             is_potential_llm_span = any(
@@ -167,11 +166,28 @@ class DBSpanExporter(SpanExporter):
                     pass
 
             try:
-                print(trace_id, span.name, start, end, json.dumps({}))
+                session_id = attrs.get("session.id")
+                if session_id:
+                    try:
+                        conn.execute(
+                            "INSERT OR IGNORE INTO sessions (id, started_at, metadata) VALUES (?, ?, ?)",
+                            (session_id, start, json.dumps({}))
+                        )
+                    except:
+                        pass
+
                 conn.execute(
-                    "INSERT OR IGNORE INTO traces (id,name,started_at,ended_at,metadata)"
-                    " VALUES (?,?,?,?,?)",
-                    (trace_id, span.name, start, end, json.dumps({}))
+                    """
+                    INSERT INTO traces (id, session_id, name, started_at, ended_at, metadata)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET
+                        session_id = excluded.session_id,
+                        name = excluded.name,
+                        started_at = excluded.started_at,
+                        ended_at = excluded.ended_at,
+                        metadata = excluded.metadata
+                    """,
+                    (trace_id, session_id, span.name, start, end, json.dumps({}))
                 )
                 conn.execute(
                     "INSERT INTO spans"
@@ -184,8 +200,8 @@ class DBSpanExporter(SpanExporter):
                         str(span.status.status_code), json.dumps(attrs)
                     )
                 )
-            except Exception as e:
-                print(f"Error inserting trace: {e}")
+            except:
+                pass
 
             nio = attrs.get("gen_ai.normalized_input_output")
             if nio:
@@ -212,8 +228,8 @@ class DBSpanExporter(SpanExporter):
                         )
                         if c["total_tokens"]:
                             total_tokens_by_trace[trace_id] += int(c["total_tokens"])
-                except Exception as e:
-                    print(f"Error inserting span: {e}")
+                except:
+                    pass
 
             try:
                 for i in range(5):
@@ -225,14 +241,14 @@ class DBSpanExporter(SpanExporter):
                         "INSERT INTO tools (span_id,name,arguments) VALUES (?,?,?)",
                         (span_id, name, args)
                     )
-            except Exception as e:
-                print(f"Error inserting tool: {e}")
+            except:
+                pass
 
         try:
             for tid, tot in total_tokens_by_trace.items():
                 conn.execute("UPDATE traces SET total_tokens=? WHERE id=?", (tot, tid))
             conn.commit()
-        except Exception as e:
-            print(f"Error updating total_tokens: {e}")
+        except:
+            pass
 
         return SpanExportResult.SUCCESS

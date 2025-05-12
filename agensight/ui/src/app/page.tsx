@@ -42,7 +42,6 @@ interface Config {
 }
 
 export default function Dashboard() {
-  console.log("Dashboard Page component rendered");
   const { darkMode, toggleDarkMode } = useTheme();
   const [config, setConfig] = useState<Config | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
@@ -55,6 +54,8 @@ export default function Dashboard() {
   const [syncToMain, setSyncToMain] = useState(true);
   const [isCommitting, setIsCommitting] = useState(false);
   const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
+
+
   const [activeTab, setActiveTab] = useState(() => {
     // Check if we're in a browser environment
     if (typeof window !== 'undefined') {
@@ -214,6 +215,7 @@ export default function Dashboard() {
     enabled: activeTab === 'traces',
   });
 
+
   // Update traces state when data changes
   useEffect(() => {
     if (tracesData) {
@@ -344,7 +346,6 @@ export default function Dashboard() {
     );
   }
 
-  console.log("activeTab is", activeTab);
 
   return (
     <div className="min-h-screen flex flex-col">

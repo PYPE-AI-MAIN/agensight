@@ -1,0 +1,16 @@
+{
+  "agents": [
+    {
+      "name": "Default Agent",
+      "prompt": "deepesh",
+      "variables": [],
+      "modelParams": {
+        "model": "gpt-4o-mini",
+        "temperature": 0.7,
+        "top_p": 1,
+        "max_tokens": 2000
+      }
+    }
+  ],
+  "connections": []
+}
