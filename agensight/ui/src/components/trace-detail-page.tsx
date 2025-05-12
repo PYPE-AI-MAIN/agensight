@@ -187,7 +187,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
         // This will be read by the dashboard page component to set active tab
         sessionStorage.setItem('dashboardActiveTab', 'traces');
         // Navigate to the dashboard page
-        router.push("/dashboard");
+        router.push("/");
       }}
     >
       <IconArrowLeft size={16} />
@@ -253,7 +253,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                 <TabsList className="h-10 w-auto bg-transparent gap-6 border-0">
                   <TabsTrigger 
                     value="trace-details" 
-                    className="text-sm font-medium px-3 py-3 rounded-md border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:bg-muted/40 transition-all duration-200 cursor-pointer hover:text-primary/80 hover:bg-muted/20"
+                    className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                   >
                     <div className="flex items-center gap-2">
                       <IconFile size={18} />
@@ -263,7 +263,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                   </TabsTrigger>
                   <TabsTrigger 
                     value="span-details" 
-                    className="text-sm font-medium px-3 py-3 rounded-md border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:bg-muted/40 transition-all duration-200 cursor-pointer hover:text-primary/80 hover:bg-muted/20"
+                    className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                   >
                     <div className="flex items-center gap-2">
                       <IconList size={18} />
@@ -494,14 +494,6 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                   <div className="flex w-full h-full overflow-hidden">
                     {/* Left Panel - Spans List */}
                     <div className="w-60 border-r overflow-hidden flex flex-col flex-shrink-0" style={{ height: 'calc(100vh - 110px)' }}>
-                      {/* Fixed header */}
-                      <div className="p-4 border-b flex-shrink-0">
-                        <h3 className="text-base font-semibold mb-1">Agents & Spans</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {spans.length} span{spans.length !== 1 ? 's' : ''} in this trace
-                        </p>
-                      </div>
-                      {/* Scrollable area */}
                       <div className="overflow-y-auto flex-1 scroll-container">
                         {/* Group spans by agent name */}
                         {Object.entries(
@@ -565,9 +557,6 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                               <Badge variant="outline">
                                 ID: {selectedSpan.span_id}
                               </Badge>
-                              <Badge variant="secondary" className="bg-primary/10 hover:bg-primary/15">
-                                Agent
-                              </Badge>
                             </div>
                             <div className="mt-3 text-sm text-muted-foreground flex items-center gap-2">
                               <IconClock size={16} />
@@ -586,21 +575,21 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                               <TabsList className="bg-transparent border-b w-full px-4 rounded-none h-10 justify-start gap-4 flex-shrink-0">
                                 <TabsTrigger 
                                   value="completion" 
-                                  className="text-sm font-medium px-3 py-3 rounded-md border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:bg-muted/40 transition-all duration-200 cursor-pointer hover:text-primary/80 hover:bg-muted/20"
+                                  className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                                 >
                                   <span>Span</span>
                                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
                                 </TabsTrigger>
                                 <TabsTrigger 
                                   value="tools" 
-                                  className="text-sm font-medium px-3 py-3 rounded-md border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:bg-muted/40 transition-all duration-200 cursor-pointer hover:text-primary/80 hover:bg-muted/20"
+                                  className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                                 >
                                   <span>Tool Calls</span>
                                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
                                 </TabsTrigger>
                                 <TabsTrigger 
                                   value="agent" 
-                                  className="text-sm font-medium px-3 py-3 rounded-md border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:bg-muted/40 transition-all duration-200 cursor-pointer hover:text-primary/80 hover:bg-muted/20"
+                                  className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                                 >
                                   <span>Agent Info</span>
                                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
