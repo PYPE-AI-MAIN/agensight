@@ -35,7 +35,7 @@ Once your agent is running, view the traces:
 agensight view
 ```
 
-This opens a web interface where you can:
+This opens a web interface at `http://localhost:5001` where you can:
 - Visualize agent interactions as a graph
 - Inspect prompts and responses
 - Debug token usage

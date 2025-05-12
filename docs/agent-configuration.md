@@ -77,47 +77,4 @@ Connections define how agents interact with each other:
 
 This means the output from `AgentA` will be passed to `AgentB` as the variable `result`.
 
-## Programmatic Configuration
-
-## Tracing Configuration
-
-
-```python
-from agensight.tracing import setup_tracing, trace_agent
-
-# Setup global tracing
-setup_tracing("my-agent-system")
-
-# Trace specific agent
-trace_agent("AgentName")
 ```
-
-## MCP Server Integration
-
-Configure integration with the MCP server for visualization:
-
-```python
-from agensight.mcp import connect_mcp, register_agents
-
-# Connect to MCP server
-connect_mcp(url="http://localhost:8000")
-
-# Register agents with MCP
-register_agents()
-```
-
-## Environment Variables
-
-Agensight respects the following environment variables:
-
-- `AGENSIGHT_DB_PATH`: Path to the traces database
-- `AGENSIGHT_CONFIG_PATH`: Path to the configuration file
-- `AGENSIGHT_MCP_URL`: URL of the MCP server
-- `AGENSIGHT_LOG_LEVEL`: Logging level (DEBUG, INFO, WARNING, ERROR)
-
-You can set these in your environment or in a `.env` file:
-
-```bash
-AGENSIGHT_DB_PATH=./data/traces.db
-AGENSIGHT_MCP_URL=http://localhost:8000
-``` 
