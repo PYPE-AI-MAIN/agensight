@@ -6,10 +6,12 @@ from opentelemetry import trace
 from agensight.tracing.token_propagator import TokenPropagator
 
 def setup_tracing(service_name="default", exporter_type=None):
+    print("Setting up tracing")
     if exporter_type is None:
         exporter_type = os.getenv("TRACE_EXPORTER", "console")
     from agensight.tracing.db import init_schema
     if exporter_type == "db":
+        print("Initializing DB schema")
         init_schema()
 
     exporter = get_exporter(exporter_type)
