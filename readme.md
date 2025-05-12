@@ -7,11 +7,22 @@
 
 ## 🚀 Get Started
 
-Install Agensight in your agent project:
+Create and activate a virtual environment:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+Then install:
 
 ```bash
 pip install agensight
 ```
+
+> ⚠️ It's strongly recommended to use a virtual environment.
+
+---
 
 ## 🧩 Quick Integration
 
