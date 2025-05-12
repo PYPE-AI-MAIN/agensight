@@ -494,14 +494,6 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                   <div className="flex w-full h-full overflow-hidden">
                     {/* Left Panel - Spans List */}
                     <div className="w-60 border-r overflow-hidden flex flex-col flex-shrink-0" style={{ height: 'calc(100vh - 110px)' }}>
-                      {/* Fixed header */}
-                      <div className="p-4 border-b flex-shrink-0">
-                        <h3 className="text-base font-semibold mb-1">Agents & Spans</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {spans.length} span{spans.length !== 1 ? 's' : ''} in this trace
-                        </p>
-                      </div>
-                      {/* Scrollable area */}
                       <div className="overflow-y-auto flex-1 scroll-container">
                         {/* Group spans by agent name */}
                         {Object.entries(
@@ -564,9 +556,6 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                               </Badge>
                               <Badge variant="outline">
                                 ID: {selectedSpan.span_id}
-                              </Badge>
-                              <Badge variant="secondary" className="bg-primary/10 hover:bg-primary/15">
-                                Agent
                               </Badge>
                             </div>
                             <div className="mt-3 text-sm text-muted-foreground flex items-center gap-2">
