@@ -17,7 +17,8 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 Then install:
 
 ```bash
-pip install agensight
+# Install the latest stable version
+pip install --upgrade agensight
 ```
 
 > ⚠️ It's strongly recommended to use a virtual environment.
