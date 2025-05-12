@@ -155,13 +155,33 @@ def span(
                     span_obj.set_attribute("gen_ai.normalized_input_output", json.dumps(io_data))
                     raise
 
+                # ── extract token usage ─
                 usage = _extract_usage_from_result(result)
-                if usage:
-                    span_obj.set_attribute("llm.usage.total_tokens", usage.get("total_tokens"))
-                    span_obj.set_attribute("gen_ai.usage.prompt_tokens", usage.get("prompt_tokens"))
-                    span_obj.set_attribute("gen_ai.usage.completion_tokens", usage.get("completion_tokens"))
+                total = usage.get("total_tokens") if usage else None
+                prompt = usage.get("prompt_tokens") if usage else None
+                completion = usage.get("completion_tokens") if usage else None
 
+<<<<<<< HEAD
                 io_data = normalize_input_output(input, output, fallback_input, result, span_obj.attributes)
+=======
+                # Fill missing total from prompt + completion
+                if total is None and prompt is not None and completion is not None:
+                    total = prompt + completion
+
+                # Safe set (OpenTelemetry rejects None)
+                if total is not None:
+                    span_obj.set_attribute("llm.usage.total_tokens", int(total))
+                if prompt is not None:
+                    span_obj.set_attribute("gen_ai.usage.prompt_tokens", int(prompt))
+                if completion is not None:
+                    span_obj.set_attribute("gen_ai.usage.completion_tokens", int(completion))
+
+                # ── final I/O blob ─
+                io_data = normalize_input_output(
+                    input, output, fallback_input, result,
+                    extra_attributes=span_obj.attributes,
+                )
+>>>>>>> prompt-config
                 span_obj.set_attribute("gen_ai.normalized_input_output", json.dumps(io_data))
 
                 return result

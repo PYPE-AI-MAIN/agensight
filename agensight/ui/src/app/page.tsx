@@ -42,7 +42,6 @@ interface Config {
 }
 
 export default function Dashboard() {
-  console.log("Dashboard Page component rendered");
   const { darkMode, toggleDarkMode } = useTheme();
   const [config, setConfig] = useState<Config | null>(null);
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
@@ -55,6 +54,8 @@ export default function Dashboard() {
   const [syncToMain, setSyncToMain] = useState(true);
   const [isCommitting, setIsCommitting] = useState(false);
   const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
+
+
   const [activeTab, setActiveTab] = useState(() => {
     // Check if we're in a browser environment
     if (typeof window !== 'undefined') {
@@ -214,6 +215,7 @@ export default function Dashboard() {
     enabled: activeTab === 'traces',
   });
 
+
   // Update traces state when data changes
   useEffect(() => {
     if (tracesData) {
@@ -344,7 +346,6 @@ export default function Dashboard() {
     );
   }
 
-  console.log("activeTab is", activeTab);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -356,19 +357,19 @@ export default function Dashboard() {
                 <TabsList className="bg-white dark:bg-card p-1 rounded-lg shadow-sm">
                   <TabsTrigger 
                     value="experiments" 
-                    className="px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-all font-medium"
+                    className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                   >
                     Experiments
                   </TabsTrigger>
                   <TabsTrigger 
                     value="traces" 
-                    className="px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-all font-medium"
+                    className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                   >
                     Traces
                   </TabsTrigger>
                   <TabsTrigger 
                     value="evaluations" 
-                    className="px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md transition-all font-medium"
+                    className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                   >
                     Evaluations
                   </TabsTrigger>
