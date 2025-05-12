@@ -1,9 +1,10 @@
 import os
 from openai import OpenAI
-from agensight import init, trace, span
+import agensight
+from agensight.tracing.decorators import trace, span
 
 # Init tracing and instrumentation
-init(name="chatbot-with-tools")
+agensight.init(name="chatbot-with-tools")
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
