@@ -1,0 +1,2 @@
+[console_scripts]
+agensight = cli.main:main

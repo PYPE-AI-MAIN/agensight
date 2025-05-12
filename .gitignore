@@ -1,1 +1,7 @@
 venv
+log
+.agensight
+agensight/ui/node_modules
+node_modules
+log
+

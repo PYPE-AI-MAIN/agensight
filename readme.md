@@ -1,55 +1,126 @@
 # Agensight
 
-Agensight is a Python SDK and CLI tool that helps you log, track, and visualize your OpenAI agent interactions.  
-It is designed for developers building LLM-powered applications who want to keep a record of prompts, completions, and agent behavior for debugging, analytics, or demonstration.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
+
+Agensight is a powerful SDK for visualizing, managing, and debugging AI agents. It provides intuitive tools to monitor agent interactions, manage configurations, and improve the development workflow for AI systems.
 
 ## Features
 
-- **Easy Logging:** Log every prompt and response from your agent with a single line of code.
-- **Web Dashboard:** Instantly view and explore your agent’s history in your browser.
-- **CLI Tool:** Launch the dashboard and manage your logs from the command line.
-- **Seamless Integration:** Works with OpenAI’s API and your own agent logic.
+- **Agent Visualization**: Interactive graph-based visualization of agent interactions and data flow
+- **Configuration Management**: Version control for agent configurations
+- **Prompt Engineering**: Edit and optimize prompts with a built-in editor
+- **Web Dashboard**: Intuitive UI for monitoring and managing your agents
+- **Command Line Interface**: Quickly access your agents from the terminal
 
-## Example Usage
+## Installation
 
-```python
-import openai
-from agensight.agent import Agent
-
-client = openai.OpenAI()  # Set your API key in env or pass it here
-
-agent = Agent("new_agent")
-
-prompt_template = "Tell me {tell} and say {say}"
-values = {"tell": "hello", "say": "world"}
-
-result = agent.wrapper(prompt_template, values)
-
-response = openai.chat.completions.create(
-    model="gpt-3.5-turbo",
-    messages=[{"role": "user", "content": result}]
-)
-
-output = response.choices[0].message.content
-
-agent.log_interaction(result, output)
+```bash
+pip install agensight
 ```
 
-## Getting Started
+## Quick Start
 
-1. **Install:**
-   ```bash
-   pip install agensight
-   ```
+See the `examples/` folder for usage examples and scripts demonstrating Agensight features.
 
-2. **Log interactions in your code** (see example above).
+## Installation (Development)
 
-3. **View your project:**
-   ```bash
-   agensight view
-   ```
-   This will open a web dashboard to explore your agent’s activity.
+Install all dependencies from the requirements file:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Development & Local Setup
+
+To work on Agensight locally, follow these steps:
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/agensight.git
+cd agensight
+```
+
+### 2. Set Up Python Environment
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+### 3. Set Up the UI (Frontend)
+```bash
+cd agensight/ui
+npm install
+npm run dev
+```
+This will start the UI on [http://localhost:5173](http://localhost:5173) (or similar).
+
+### 4. Run the Backend (FastAPI server)
+```bash
+cd agensight/server
+uvicorn app:app --reload
+```
+This will start the backend server on [http://localhost:8000](http://localhost:8000).
+
+### 5. Launch the Dashboard
+```bash
+python3 -m cli.main view
+```
+
+### 6. Inspecting the Database
+- The backend uses SQLite (default: `agensight/tracing/traces.db`).
+- To inspect the database, use the SQLite CLI:
+  ```bash
+  sqlite3 agensight/tracing/traces.db
+  .tables
+  SELECT * FROM traces LIMIT 5;
+  .exit
+  ```
+- Or use a GUI tool like [DB Browser for SQLite](https://sqlitebrowser.org/).
+
+### 7. Code Style & Linting
+- Python: Use `black` and `flake8` for formatting and linting.
+- TypeScript/JS: Use `eslint` and `prettier` in the `ui/` directory.
+
+### 8. Contributing
+- Please see the [contributing guidelines](./CONTRIBUTING.md) for more details.
+
+## Configuration
+
+Agensight uses a configuration file to manage agents, connections, and settings:
+
+```json
+{
+  "agents": [
+    {
+      "name": "AnalysisAgent",
+      "prompt": "You are an expert analysis agent...",
+      "variables": ["input_data"],
+      "modelParams": {
+        "model": "gpt-4o",
+        "temperature": 0.2
+      }
+    }
+  ],
+  "connections": [
+    {"from": "AnalysisAgent", "to": "OutputAgent"}
+  ]
+}
+```
+
+## Documentation
+
+For detailed documentation, please visit our [docs](./docs):
+
+- [API Reference](./docs/api-reference.md)
+- [Advanced Configuration](./docs/advanced-configuration.md)
+- [Examples](./examples/)
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## Support
+
+For questions, issues or feature requests, please [create an issue](https://github.com/yourusername/agensight/issues).
