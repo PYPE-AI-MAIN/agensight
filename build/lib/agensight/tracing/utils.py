@@ -5,6 +5,7 @@ def ns_to_seconds(nanoseconds: int) -> float:
     return nanoseconds / 1e9
 
 def transform_trace_to_agent_view(spans, span_details_by_id):
+    print("[DEBUG] transform_trace_to_agent_view called")
     agents = []
     span_map = {s["id"]: s for s in spans}
 
@@ -13,7 +14,9 @@ def transform_trace_to_agent_view(spans, span_details_by_id):
 
     for s in spans:
         details = span_details_by_id.get(s["id"], {})
+        print(f"[DEBUG] Checking span {s['id']} for prompts")
         for p in details.get("prompts", []):
+            print(f"  [DEBUG] prompt: {p}")
             if p["role"] == "user":
                 trace_input = p["content"]
                 break
@@ -22,7 +25,9 @@ def transform_trace_to_agent_view(spans, span_details_by_id):
 
     for s in reversed(spans):
         details = span_details_by_id.get(s["id"], {})
+        print(f"[DEBUG] Checking span {s['id']} for completions")
         for c in details.get("completions", []):
+            print(f"  [DEBUG] completion: {c}")
             if c["role"] == "assistant":
                 trace_output = c["content"]
                 break
@@ -65,7 +70,8 @@ def transform_trace_to_agent_view(spans, span_details_by_id):
 
                 try:
                     args = json.loads(args_json) if args_json else None
-                except Exception:
+                except Exception as e:
+                    print(f"[ERROR] Failed to parse tool args: {e}")
                     args = None
 
                 output = None
@@ -88,6 +94,7 @@ def transform_trace_to_agent_view(spans, span_details_by_id):
 
         agents.append(agent)
 
+    print("[DEBUG] Completed transform_trace_to_agent_view")
     return {
         "trace_input": trace_input,
         "trace_output": trace_output,
@@ -95,15 +102,18 @@ def transform_trace_to_agent_view(spans, span_details_by_id):
     }
 
 def parse_normalized_io_for_span(span_id: str, attribute_json: str):
+    print(f"[DEBUG] parse_normalized_io_for_span called for span_id: {span_id}")
     try:
         parsed = json.loads(attribute_json)
         if not isinstance(parsed, dict):
+            print("[WARN] Parsed attribute is not a dict")
             return [], []
 
         prompt_records = []
         completion_records = []
 
         for idx, prompt in enumerate(parsed.get("prompts", [])):
+            print(f"  [DEBUG] prompt[{idx}]: {prompt}")
             prompt_records.append({
                 "span_id": span_id,
                 "role": prompt.get("role", "user"),
@@ -112,6 +122,7 @@ def parse_normalized_io_for_span(span_id: str, attribute_json: str):
             })
 
         for idx, completion in enumerate(parsed.get("completions", [])):
+            print(f"  [DEBUG] completion[{idx}]: {completion}")
             completion_records.append({
                 "span_id": span_id,
                 "role": completion.get("role", "assistant"),
@@ -125,5 +136,6 @@ def parse_normalized_io_for_span(span_id: str, attribute_json: str):
 
         return prompt_records, completion_records
 
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e:
+        print(f"[ERROR] JSON decode failed in parse_normalized_io_for_span: {e}")
         return [], []
