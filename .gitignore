@@ -4,4 +4,7 @@ log
 agensight/ui/node_modules
 node_modules
 log
+build
+agensight/tracing/traces.db
+
 
