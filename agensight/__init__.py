@@ -6,7 +6,6 @@ from .tracing.decorators import trace, span
 
 
 def init(name="default", mode="dev", auto_instrument_llms=True, session=None):
-    print("Initializing Agensight")
     mode_to_exporter = {
         "dev": "db",
         "console": "console",
