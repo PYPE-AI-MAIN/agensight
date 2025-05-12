@@ -56,7 +56,6 @@ For detailed documentation, please see the [docs folder](./docs):
 
 - [SDK Reference](./docs/sdk-reference.md)
 - [Agent Configuration](./docs/agent-configuration.md)
-- [Tracing Architecture](./docs/tracing-architecture.md)
 - [Examples](./examples/)
 
 ## 🤝 Support
