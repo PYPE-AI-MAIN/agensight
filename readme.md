@@ -3,124 +3,66 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
 
-Agensight is a powerful SDK for visualizing, managing, and debugging AI agents. It provides intuitive tools to monitor agent interactions, manage configurations, and improve the development workflow for AI systems.
+**Observability SDK for LLM workflows — trace, debug, and optimize your agent interactions.**
 
-## Features
+## 🚀 Get Started
 
-- **Agent Visualization**: Interactive graph-based visualization of agent interactions and data flow
-- **Configuration Management**: Version control for agent configurations
-- **Prompt Engineering**: Edit and optimize prompts with a built-in editor
-- **Web Dashboard**: Intuitive UI for monitoring and managing your agents
-- **Command Line Interface**: Quickly access your agents from the terminal
-
-## Installation
+Install Agensight in your agent project:
 
 ```bash
 pip install agensight
 ```
 
-## Quick Start
+## 🧩 Quick Integration
 
-See the `examples/` folder for usage examples and scripts demonstrating Agensight features.
+```python
+# In your agent file
+from agensight.tracing import setup_tracing, get_tracer
+from agensight.integrations import instrument_openai
 
-## Installation (Development)
+# Setup tracing
+setup_tracing("my-agent-project")
+instrument_openai()  # Auto-instrument OpenAI calls
 
-Install all dependencies from the requirements file:
+# Your existing agent code...
+```
+
+## 🔍 View Your Traces
+
+Once your agent is running, view the traces:
 
 ```bash
-pip install -r requirements.txt
+agensight view
 ```
 
-## Development & Local Setup
+This opens a web interface at `http://localhost:5001` where you can:
+- Visualize agent interactions as a graph
+- Inspect prompts and responses
+- Debug token usage
+- Compare different runs
 
-To work on Agensight locally, follow these steps:
+## 🧠 Agent Graph Visualization
 
-### 1. Clone the Repository
+Fetch prompts and create agent graphs using our MCP server:
+
 ```bash
-git clone https://github.com/yourusername/agensight.git
-cd agensight
+# Install the MCP server from 
+https://github.com/PYPE-AI-MAIN/agensight_mcp_server
 ```
 
-### 2. Set Up Python Environment
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-```
+## 📚 Documentation
 
-### 3. Set Up the UI (Frontend)
-```bash
-cd agensight/ui
-npm install
-npm run dev
-```
-This will start the UI on [http://localhost:5173](http://localhost:5173) (or similar).
+For detailed documentation, please see the [docs folder](./docs):
 
-### 4. Run the Backend (FastAPI server)
-```bash
-cd agensight/server
-uvicorn app:app --reload
-```
-This will start the backend server on [http://localhost:8000](http://localhost:8000).
-
-### 5. Launch the Dashboard
-```bash
-python3 -m cli.main view
-```
-
-### 6. Inspecting the Database
-- The backend uses SQLite (default: `agensight/tracing/traces.db`).
-- To inspect the database, use the SQLite CLI:
-  ```bash
-  sqlite3 agensight/tracing/traces.db
-  .tables
-  SELECT * FROM traces LIMIT 5;
-  .exit
-  ```
-- Or use a GUI tool like [DB Browser for SQLite](https://sqlitebrowser.org/).
-
-### 7. Code Style & Linting
-- Python: Use `black` and `flake8` for formatting and linting.
-- TypeScript/JS: Use `eslint` and `prettier` in the `ui/` directory.
-
-### 8. Contributing
-- Please see the [contributing guidelines](./CONTRIBUTING.md) for more details.
-
-## Configuration
-
-Agensight uses a configuration file to manage agents, connections, and settings:
-
-```json
-{
-  "agents": [
-    {
-      "name": "AnalysisAgent",
-      "prompt": "You are an expert analysis agent...",
-      "variables": ["input_data"],
-      "modelParams": {
-        "model": "gpt-4o",
-        "temperature": 0.2
-      }
-    }
-  ],
-  "connections": [
-    {"from": "AnalysisAgent", "to": "OutputAgent"}
-  ]
-}
-```
-
-## Documentation
-
-For detailed documentation, please visit our [docs](./docs):
-
-- [API Reference](./docs/api-reference.md)
-- [Advanced Configuration](./docs/advanced-configuration.md)
+- [SDK Reference](./docs/sdk-reference.md)
+- [Agent Configuration](./docs/agent-configuration.md)
+- [Tracing Architecture](./docs/tracing-architecture.md)
 - [Examples](./examples/)
 
-## License
+## 🤝 Support
+
+For questions, issues or feature requests, please [create an issue](https://github.com/PYPE-AI-MAIN/agensight/issues).
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
-
-## Support
-
-For questions, issues or feature requests, please [create an issue](https://github.com/yourusername/agensight/issues).
