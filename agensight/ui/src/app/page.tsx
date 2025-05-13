@@ -12,7 +12,7 @@ import { useEffect, useState, useCallback } from "react"
 import AgentGraph from "@/components/agent-graph"
 import { AgentInfo } from "@/components/agent-info"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { IconGitBranch, IconVersions, IconGitCommit, IconLayoutGrid } from "@tabler/icons-react"
+import { IconGitBranch, IconVersions, IconGitCommit } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogTitle, DialogContent, DialogHeader, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -28,6 +28,7 @@ import { getConfigVersions, getConfigByVersion, syncConfigToMain, commitConfigVe
 import { updateAgent } from "@/lib/services/agents"
 import { getAllTraces } from "@/lib/services/traces"
 import type { Connection } from "@/lib/fallbackConfigs"
+import Image from "next/image"
 
 // Define types for config and agent
 interface Agent {
@@ -275,7 +276,6 @@ export default function Dashboard() {
   const isLoading = versionsLoading || (configLoading && !!selectedVersion);
   
   useEffect(() => {
-    console.log("activeTab changed:", activeTab);
     if (activeTab === 'traces') {
       refetchTraces();
     }
@@ -484,7 +484,7 @@ export default function Dashboard() {
                 ) : (
                   <div className="text-center flex items-center justify-center h-full">
                     <div>
-                      <IconLayoutGrid className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <Image src="/pype-logo.png" alt="PYPE Logo" width={100} height={100} className="h-12 w-20 mx-auto mb-4" />
                       <h3 className="text-lg font-medium">No traces available</h3>
                       <p className="text-muted-foreground mt-2">
                         Trace data will appear here when you run experiments
@@ -498,7 +498,7 @@ export default function Dashboard() {
             {activeTab === "evaluations" && (
               <div className="border rounded-lg p-8 flex items-center justify-center bg-card/50 backdrop-blur-sm h-[550px]">
                 <div className="text-center">
-                  <IconLayoutGrid className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <Image src="/pype-logo.png" alt="PYPE Logo" width={100} height={100} className="h-12 w-20 mx-auto mb-4" />
                   <h3 className="text-lg font-medium">No evaluation till now</h3>
                   <p className="text-muted-foreground mt-2">
                     Evaluation data will appear here when you run experiments

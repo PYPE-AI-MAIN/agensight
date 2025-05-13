@@ -24,6 +24,7 @@ export const schema = z.object({
   trace_input: z.string(),
   trace_output: z.string(),
   metadata: z.any(),
+  total_tokens: z.number(),
   duration: z.any(),
 });
 

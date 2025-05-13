@@ -66,6 +66,20 @@ export const columns: ColumnDef<TraceItem>[] = [
     size: 200,
   },
   {
+    accessorKey: "tokens",
+    header: "Total Tokens",
+    cell: ({ row }) => {
+      return (
+        <div className="w-full text-base overflow-hidden text-ellipsis">
+          <div className="truncate">
+            {row.original.total_tokens}
+          </div>
+        </div>
+      );
+    },
+    size: 200,
+  },
+  {
     accessorKey: "metadata",
     header: "Metadata",
     cell: ({ row }) => {

@@ -1,4 +1,4 @@
-# agensight
+# ![pype_logo](./assets/pype_logo.png) agensight
 
 **Observability SDK for LLM workflows — trace, debug, and optimize your prompts.**
 
@@ -9,7 +9,7 @@
 - Built-in local prompt playground
 - Developer-first observability for OpenAI & other LLM providers
 
-## Installation
+## ![pype_logo](./assets/pype_logo.png) Installation
 
 Requires Python ≥3.10
 
@@ -27,7 +27,7 @@ Your dashboard will open at localhost:5001.
 
 
 
-## Traces Setup
+## ![pype_logo](./assets/pype_logo.png) Traces Setup
 
 ```python
 from agensight import init, trace, span
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
 
 
-## Playground Setup
+## ![pype_logo](./assets/pype_logo.png) Playground Setup
 
 ```bash
 # Clone the repository
@@ -91,7 +91,7 @@ In your Cursor chatbot, enter:
 Please analyze this codebase using the generateAgensightConfig MCP tool
 ```
 
-## Configuration
+## ![pype_logo](./assets/pype_logo.png) Configuration
 
 ### Trace Configuration
 
@@ -138,7 +138,7 @@ Agensight uses a configuration file (`agensight.config.json` by default) to defi
 ```
 
 
-## Features
+## ![pype_logo](./assets/pype_logo.png) Features
 
 - Auto-instrumented tracing for LLM calls
 - Local development mode for offline trace inspection
@@ -147,14 +147,14 @@ Agensight uses a configuration file (`agensight.config.json` by default) to defi
 - Experimental prompt playground
 - Maintain the prompt versions
 
-## Security & Local Storage
+## ![pype_logo](./assets/pype_logo.png) Security & Local Storage
 
 - All data stored locally inside the SDK
 - No data uploaded or tracked externally
 - Prompts versions stored locally in `.agensight` file
 - Recommended: Run in isolated virtual environments
 
-## Contributing
+## ![pype_logo](./assets/pype_logo.png) Contributing
 
 Open source contributions are welcome. Open an issue or submit a PR via GitHub.
 
@@ -179,11 +179,11 @@ Open source contributions are welcome. Open an issue or submit a PR via GitHub.
 - Add type annotations to all Python functions
 - Follow Conventional Commits for commit messages
 
-## Roadmap
+## ![pype_logo](./assets/pype_logo.png) Roadmap
 
 - JavaScript SDK
 - Cloud viewer
 
-## License
+## ![pype_logo](./assets/pype_logo.png) License
 
 MIT License • © 2025 agensight contributors

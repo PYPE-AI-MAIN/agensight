@@ -34,7 +34,6 @@ function FlowChart({ agents = [], connections = [], onNodeClick }: Props) {
   useEffect(() => {
     const checkDarkMode = () => {
       const isDark = document.documentElement.classList.contains('dark');
-      console.log("Dark mode detected:", isDark);
       setIsDarkMode(isDark);
     };
     

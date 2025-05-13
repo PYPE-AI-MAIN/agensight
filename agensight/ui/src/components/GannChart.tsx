@@ -224,7 +224,7 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
           {/* Show span types in the legend */}
           {agentSpans.map(span => (
             span.name !== "Assistant" && 
-            <div key={`legend-${span.name}`} className="flex items-center gap-1">
+            <div key={`legend-${span.span_id}`} className="flex items-center gap-1">
               <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors.default }}></span>
               <span className="text-xs">{span.name}</span>
             </div>
@@ -561,7 +561,7 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
           {/* Show span types in the legend */}
           {agentSpans.map(span => (
             span.name !== "Assistant" && 
-            <div key={`legend-${span.name}`} className="flex items-center gap-1">
+            <div key={`legend-${span.span_id}`} className="flex items-center gap-1">
               <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors.default }}></span>
               <span className="text-xs">{span.name}</span>
             </div>
