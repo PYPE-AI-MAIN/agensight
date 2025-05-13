@@ -1,15 +1,34 @@
-# ![pype_logo](./assets/pype_logo.png) agensight
+# Agensight
 
-**Observability SDK for LLM workflows — trace, debug, and optimize your prompts.**
+**<p>Open Source Exprerimentation Studio for Conversational AI Agents</p>**
 
-`agensight` provides monitoring and debugging tools for large language model (LLM) interactions during development. It captures structured traces, supports local inspection, and offers a plug-and-play experience with minimal configuration.
+Pype AI's Agensight is an open-source experimentation studio built for conversational AI agents. It is similar to LangGraph but supports any agentic framework (likes of Autogen, LangGraph etc) or modality (voice, image & text). With minimal code changes, Pype AI provides complete observability to help you trace agentic workflows for entire sessions or user conversations.
 
-- Python SDK (JavaScript coming soon)
-- Traces every LLM call with context
-- Built-in local prompt playground
-- Developer-first observability for OpenAI & other LLM providers
+> It features a plug & play playground for editing prompts and tools. It uses an MCP server that if used via cursor or whindsurf can explore your code and generate a playground synced to your code. You can do any edits to your prompts or tools in this playground. Changes made in the playground sync directly to your code, allowing you to effortlessly run, replay, and evaluate experiments.
 
-## ![pype_logo](./assets/pype_logo.png) Installation
+> It provides Conversational Replays that help you visit any session, replay the conversation with any multiple versions of the agents (created by editing the agents (model, prompt, rag, tools) and Evaluate to help you improve your customer interactions.
+
+`Agensight` empowers you to quickly iterate, build evaluations, and improve agent conversations.
+
+## gif
+
+## Features
+
+- Auto-instrumented tracing for LLM calls
+- Local development mode for offline trace inspection
+- Customizable trace and span naming
+- Token usage tracking
+- Experimental prompt playground
+- Maintain the prompt versions
+
+## Security & Local Storage
+
+- All data stored locally inside the SDK
+- No data uploaded or tracked externally
+- Prompts versions stored locally in `.agensight` file
+- Recommended: Run in isolated virtual environments
+
+## Quick Start
 
 Requires Python ≥3.10
 
@@ -27,7 +46,10 @@ Your dashboard will open at localhost:5001.
 
 
 
-## ![pype_logo](./assets/pype_logo.png) Traces Setup
+## Agent Observability Setup
+
+<A line about traces and spans>
+<A picture of the session view>
 
 ```python
 from agensight import init, trace, span
@@ -51,14 +73,13 @@ if __name__ == "__main__":
 ```
 
 
+## Playground Setup
 
-
-
-## ![pype_logo](./assets/pype_logo.png) Playground Setup
+To set up the agent playground, we provide an MCP server that, when integrated with Cursor or Windsurf, visually maps your agent workflows. It explores your codebase using Cursor or Windsurf and generates an editable agent workflow configuration (JSON file). You can then visualize your agent workflows in the studio by simply running `agensight view` in your terminal.
 
 ```bash
 # Clone the repository
-git clone git@github.com:PYPE-AI-MAIN/agensight_mcpserver.git
+git clone git@github.com:PYPE-AI-MAIN/agensight_mcp_server.git
 cd agensight_mcp_server
 
 # Create a virtual environment
@@ -66,7 +87,7 @@ python -m venv mcp-env
 source mcp-env/bin/activate  # On Windows: mcp-env\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install mcp-server
 ```
 
 ### MCP Server Configuration (for Claude/Cursor)
@@ -138,21 +159,6 @@ Agensight uses a configuration file (`agensight.config.json` by default) to defi
 ```
 
 
-## ![pype_logo](./assets/pype_logo.png) Features
-
-- Auto-instrumented tracing for LLM calls
-- Local development mode for offline trace inspection
-- Customizable trace and span naming
-- Token usage tracking
-- Experimental prompt playground
-- Maintain the prompt versions
-
-## ![pype_logo](./assets/pype_logo.png) Security & Local Storage
-
-- All data stored locally inside the SDK
-- No data uploaded or tracked externally
-- Prompts versions stored locally in `.agensight` file
-- Recommended: Run in isolated virtual environments
 
 ## ![pype_logo](./assets/pype_logo.png) Contributing
 
