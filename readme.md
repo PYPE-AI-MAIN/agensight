@@ -12,6 +12,21 @@ Pype AI's Agensight is an open-source experimentation studio built for conversat
 
 ## gif
 
+## Features
+
+- Auto-instrumented tracing for LLM calls
+- Local development mode for offline trace inspection
+- Customizable trace and span naming
+- Token usage tracking
+- Experimental prompt playground
+- Maintain the prompt versions
+
+## Security & Local Storage
+
+- All data stored locally inside the SDK
+- No data uploaded or tracked externally
+- Prompts versions stored locally in `.agensight` file
+- Recommended: Run in isolated virtual environments
 
 ## Quick Start
 
@@ -144,21 +159,6 @@ Agensight uses a configuration file (`agensight.config.json` by default) to defi
 ```
 
 
-## Features
-
-- Auto-instrumented tracing for LLM calls
-- Local development mode for offline trace inspection
-- Customizable trace and span naming
-- Token usage tracking
-- Experimental prompt playground
-- Maintain the prompt versions
-
-## Security & Local Storage
-
-- All data stored locally inside the SDK
-- No data uploaded or tracked externally
-- Prompts versions stored locally in `.agensight` file
-- Recommended: Run in isolated virtual environments
 
 ## Contributing
 
