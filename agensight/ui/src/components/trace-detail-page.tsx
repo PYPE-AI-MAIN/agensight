@@ -221,7 +221,7 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                 Name: {trace.name}
               </Badge>
               <Badge variant="outline" className="text-xs" suppressHydrationWarning>
-                Latency: {trace.duration}
+                Latency: {trace.duration}s
               </Badge>
               <Badge variant="outline" className="text-xs" suppressHydrationWarning>
                 Total Tokens: {trace.total_tokens}
