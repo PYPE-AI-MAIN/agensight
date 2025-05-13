@@ -43,7 +43,7 @@ function usePreventScrollPropagation() {
 
 
 
-function TraceDetailPage({ id,name,latency, router }: TraceDetailPageProps) {
+function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPageProps) {
   const [activeTab, setActiveTab] = useState("trace-details");
   const [trace, setTrace] = useState<TraceItem | null>(null);
   const [spans, setSpans] = useState<Span[]>([]);
@@ -67,9 +67,7 @@ function TraceDetailPage({ id,name,latency, router }: TraceDetailPageProps) {
   useEffect(() => {
     if (traceData) {
       try {
-        // Our new format doesn't match the schema, so we'll handle it directly
-        console.log("Received trace data:", traceData);
-        
+        // Our new format doesn't match the schema, so we'll handle it directly        
         // Create a minimal trace object with the fields we have
         setTrace({
           id: id as any ,
@@ -80,7 +78,8 @@ function TraceDetailPage({ id,name,latency, router }: TraceDetailPageProps) {
           trace_output: traceData.trace_output,
           metadata: {
             trace_id: id as any
-          }
+          },
+          total_tokens: total_tokens
         });
         
         // Set spans from the agents data
@@ -116,6 +115,7 @@ function TraceDetailPage({ id,name,latency, router }: TraceDetailPageProps) {
     enabled: !!selectedSpan?.span_id && !selectedSpan?.details
   });
   
+
   // Process span details when they change
   useEffect(() => {
     if (spanData) {
@@ -223,6 +223,9 @@ function TraceDetailPage({ id,name,latency, router }: TraceDetailPageProps) {
               <Badge variant="outline" className="text-xs" suppressHydrationWarning>
                 Latency: {trace.duration}
               </Badge>
+              <Badge variant="outline" className="text-xs" suppressHydrationWarning>
+                Total Tokens: {trace.total_tokens}
+              </Badge>
             </div>
           )}
         </div>
@@ -257,7 +260,7 @@ function TraceDetailPage({ id,name,latency, router }: TraceDetailPageProps) {
                   >
                     <div className="flex items-center gap-2">
                       <IconFile size={18} />
-                      <span>Details</span>
+                      <span>Trace Details</span>
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
                   </TabsTrigger>
@@ -557,6 +560,9 @@ function TraceDetailPage({ id,name,latency, router }: TraceDetailPageProps) {
                               <Badge variant="outline">
                                 ID: {selectedSpan.span_id}
                               </Badge>
+                              <Badge variant="outline">
+                                Total Tokens: {selectedSpan?.details?.completions[0].total_tokens || "N/A"} 
+                              </Badge>
                             </div>
                             <div className="mt-3 text-sm text-muted-foreground flex items-center gap-2">
                               <IconClock size={16} />
@@ -577,7 +583,7 @@ function TraceDetailPage({ id,name,latency, router }: TraceDetailPageProps) {
                                   value="completion" 
                                   className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                                 >
-                                  <span>Span</span>
+                                  <span>Span Details</span>
                                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
                                 </TabsTrigger>
                                 <TabsTrigger 
@@ -591,7 +597,7 @@ function TraceDetailPage({ id,name,latency, router }: TraceDetailPageProps) {
                                   value="agent" 
                                   className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                                 >
-                                  <span>Agent Info</span>
+                                  <span>Span Info</span>
                                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
                                 </TabsTrigger>
                               </TabsList>

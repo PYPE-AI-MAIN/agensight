@@ -171,11 +171,7 @@ export function AgentInfo({
           return;
         }
         
-        // Log what we're actually sending to help debug
-        console.log('Updating agent with data:', {
-          agent: updatedAgent,
-          config_version: configVersion
-        });
+
         
         // Use the API service to update the agent
         const result:any = await updateAgent({

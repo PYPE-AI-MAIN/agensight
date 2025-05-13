@@ -73,16 +73,15 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
       
       // Create a mapping of types to colors
       const typeColors: Record<string, string> = {
-        "User": "#4f86f7", // Blue
-        "Assistant": "#4ae0a0", // Green
-        "flight-search": "#ffa559", // Orange
-        "hotel-recommendation": "#ff5995", // Pink
-        "database-lookup": "#9370db", // Purple 
-        "gpt-4o-mini": "#66cdaa", // Medium aquamarine
-        "get_weather": "#ffd700", // Gold
-        "get_news": "#ff6b6b", // Light red
-        "router": "#8a2be2", // Blue violet
-        "default": "#a9a9a9" // Gray for unknown types
+        "default": "#10B981", // Blue default
+        // "User": "#6B7280",    // Gray for user
+        // "Assistant": "#0EA5E9", // Blue for assistant
+        // "Agent": "#8B5CF6",   // Purple for agent
+        // "Analysis": "#10B981", // Green for analysis
+        // "Tool": "#F59E0B",    // Amber for tool calls
+        // "Planner": "#EC4899",  // Pink for planner
+        // "Retrieval": "#EF4444", // Red for retrieval
+        // "Search": "#14B8A6"   // Teal for search
       };
       
       return {
@@ -224,7 +223,7 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
           {/* Show span types in the legend */}
           {agentSpans.map(span => (
             span.name !== "Assistant" && 
-            <div key={`legend-${span.name}`} className="flex items-center gap-1">
+            <div key={`legend-${span.span_id}`} className="flex items-center gap-1">
               <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors.default }}></span>
               <span className="text-xs">{span.name}</span>
             </div>
@@ -418,16 +417,7 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
       
       // Create a mapping of types to colors
       const typeColors: Record<string, string> = {
-        "User": "#4f86f7", // Blue
-        "Assistant": "#4ae0a0", // Green
-        "flight-search": "#ffa559", // Orange
-        "hotel-recommendation": "#ff5995", // Pink
-        "database-lookup": "#9370db", // Purple 
-        "gpt-4o-mini": "#66cdaa", // Medium aquamarine
-        "get_weather": "#ffd700", // Gold
-        "get_news": "#ff6b6b", // Light red
-        "router": "#8a2be2", // Blue violet
-        "default": "#a9a9a9" // Gray for unknown types
+        "default": "#10B981" // Gray for unknown types
       };
       
       return {
@@ -546,22 +536,10 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
         
         {/* Legend */}
         <div className="mt-2 flex flex-wrap gap-3 py-2 text-xs border-t">
-          <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors["User"] }}></span>
-            <span className="text-xs">User</span>
-          </div>
-          
-          <div className="border-l h-4 mx-2 border-muted-foreground/30"></div>
-          
-          <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors["Assistant"] }}></span>
-            <span className="text-xs">Assistant</span>
-          </div>
-          
           {/* Show span types in the legend */}
           {agentSpans.map(span => (
             span.name !== "Assistant" && 
-            <div key={`legend-${span.name}`} className="flex items-center gap-1">
+            <div key={`legend-${span.span_id}`} className="flex items-center gap-1">
               <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors.default }}></span>
               <span className="text-xs">{span.name}</span>
             </div>

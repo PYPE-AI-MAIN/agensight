@@ -54,7 +54,6 @@ export async function getTraceById(id: string): Promise<any> {
   const maxRetries = 3;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`Fetching trace with ID ${id} (attempt ${attempt}/${maxRetries})...`);
       const response = await fetch(`${API_BASE_URL}/traces/${id}/spans`);
       
       if (!response.ok) {
@@ -64,7 +63,6 @@ export async function getTraceById(id: string): Promise<any> {
       }
       
       const data = await response.json();
-      console.log(`Successfully fetched trace data:`, data);
       return data;
     } catch (error) {
       console.error(`Failed to fetch trace with ID ${id} (attempt ${attempt}/${maxRetries}):`, error);
@@ -79,7 +77,6 @@ export async function getSpanDetailsById(spanId: string): Promise<SpanDetails> {
   const maxRetries = 3;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`Fetching span details for ID ${spanId} (attempt ${attempt}/${maxRetries})...`);
       const response = await fetch(`${API_BASE_URL}/span/${spanId}/details`);
       
       if (!response.ok) {
@@ -89,7 +86,6 @@ export async function getSpanDetailsById(spanId: string): Promise<SpanDetails> {
       }
       
       const data = await response.json();
-      console.log(`Successfully fetched span details:`, data);
       return data;
     } catch (error) {
       console.error(`Failed to fetch span details with ID ${spanId} (attempt ${attempt}/${maxRetries}):`, error);
@@ -105,11 +101,9 @@ export async function getSpanDetailsById(spanId: string): Promise<SpanDetails> {
 
 // For future expansion - if you ever need to fetch all traces
 export async function getAllTraces(): Promise<any[]> {
-  console.log("getAllTraces CALLED");
   const maxRetries = 3;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      console.log(`Fetching all traces (attempt ${attempt}/${maxRetries})...`);
       const response = await fetch(`${API_BASE_URL}/traces`);
       
       if (!response.ok) {
@@ -119,7 +113,6 @@ export async function getAllTraces(): Promise<any[]> {
       }
       
       const data = await response.json();
-      console.log(`Successfully fetched all traces:`, data);
       return data;
     } catch (error) {
       console.error(`Failed to fetch all traces (attempt ${attempt}/${maxRetries}):`, error);
