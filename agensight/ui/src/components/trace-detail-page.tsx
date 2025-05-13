@@ -43,7 +43,7 @@ function usePreventScrollPropagation() {
 
 
 
-function TraceDetailPage({ id, router }: TraceDetailPageProps) {
+function TraceDetailPage({ id,name,latency, router }: TraceDetailPageProps) {
   const [activeTab, setActiveTab] = useState("trace-details");
   const [trace, setTrace] = useState<TraceItem | null>(null);
   const [spans, setSpans] = useState<Span[]>([]);
@@ -72,14 +72,14 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
         
         // Create a minimal trace object with the fields we have
         setTrace({
-          id: traceData?.agents[0]?.span_id ,
-          name: traceData?.agents[0]?.name,
-          session_id:traceData?.agents[0]?.session_id,
-          duration: traceData?.agents[0]?.duration,
+          id: id as any ,
+          name: name,
+          session_id: "N/A",
+          duration: latency,
           trace_input: traceData.trace_input,
           trace_output: traceData.trace_output,
           metadata: {
-            trace_id: traceData?.agents[0]?.id
+            trace_id: id as any
           }
         });
         
