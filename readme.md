@@ -1,79 +1,187 @@
-# Agensight
+# agensight
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
+**Observability SDK for LLM workflows — trace, debug, and optimize your prompts.**
 
-**Observability SDK for LLM workflows — trace, debug, and optimize your agent interactions.**
+`agensight` provides monitoring and debugging tools for large language model (LLM) interactions during development. It captures structured traces, supports local inspection, and offers a plug-and-play experience with minimal configuration.
 
-## 🚀 Get Started
+- Python SDK (JavaScript coming soon)
+- Traces every LLM call with context
+- Built-in local prompt playground
+- Developer-first observability for OpenAI & other LLM providers
 
-Create and activate a virtual environment:
+## Installation
+
+Requires Python ≥3.10
 
 ```bash
+# Create and activate a virtual environment
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install package
+pip install agensight
+agensight view 
 ```
 
-Then install:
+Your dashboard will open at localhost:5001.
 
-```bash
-# Install the latest stable version
-pip install --upgrade agensight
-```
 
-> ⚠️ It's strongly recommended to use a virtual environment.
 
----
-
-## 🧩 Quick Integration
+## Traces Setup
 
 ```python
-# In your agent file
-from agensight.tracing import setup_tracing, get_tracer
-from agensight.integrations import instrument_openai
+from agensight import init, trace, span
+import openai
 
-# Setup tracing
-setup_tracing("my-agent-project")
-instrument_openai()  # Auto-instrument OpenAI calls
+init(name="my-llm-app")  # Optional project name
 
-# Your existing agent code...
+@trace("plan_generation")
+def main():
+    @span()
+    def call_llm():
+        return openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": "Tell me a joke"}]
+        )
+    response = call_llm()
+    print(response.choices[0].message.content)
+
+if __name__ == "__main__":
+    main()
 ```
 
-## 🔍 View Your Traces
 
-Once your agent is running, view the traces:
+
+
+
+## Playground Setup
 
 ```bash
-agensight view
+# Clone the repository
+git clone git@github.com:PYPE-AI-MAIN/agensight_mcp_server.git
+cd agensight_mcp_server
+
+# Create a virtual environment
+python -m venv mcp-env
+source mcp-env/bin/activate  # On Windows: mcp-env\Scripts\activate
+
+# Install dependencies
+pip install mcp-server
 ```
 
-This opens a web interface at `http://localhost:5001` where you can:
-- Visualize agent interactions as a graph
-- Inspect prompts and responses
-- Debug token usage
-- Compare different runs
+### MCP Server Configuration (for Claude/Cursor)
 
-## 🧠 Agent Graph Visualization
-
-Fetch prompts and create agent graphs using our MCP server:
-
-```bash
-# Install the MCP server from 
-https://github.com/PYPE-AI-MAIN/agensight_mcp_server
+```json
+{
+  "mcpServers": {
+    "sqlite-server": {
+      "command": "/path/to/agensight_mcp_server/your-env/bin/python",
+      "args": [
+        "/path/to/agensight_mcp_server/server.py"
+      ],
+      "description": "tool to generate agensight config"
+    }
+  }
+}
 ```
 
-## 📚 Documentation
+In your Cursor chatbot, enter:
 
-For detailed documentation, please see the [docs folder](./docs):
+```
+Please analyze this codebase using the generateAgensightConfig MCP tool
+```
 
-- [SDK Reference](./docs/sdk-reference.md)
-- [Agent Configuration](./docs/agent-configuration.md)
-- [Examples](./examples/)
+## Configuration
 
-## 🤝 Support
+### Trace Configuration
 
-For questions, issues or feature requests, please [create an issue](https://github.com/PYPE-AI-MAIN/agensight/issues).
+| Feature      | Default            | Customizable With  |
+|--------------|--------------------|--------------------|
+| Project name | `"default"`        | `init(name="...")` |
+| Trace name   | Function name      | `@trace("...")`    |
+| Span name    | Auto (`Agent 1`, etc.) | `@span(name="...")`|
 
-## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+### Playground Configuration
+
+Agensight uses a configuration file (`agensight.config.json` by default) to define agents, their connections, and parameters.
+
+#### Basic Structure
+
+```json
+{
+  "agents": [
+    {
+      "name": "AnalysisAgent",
+      "prompt": "You are an expert analysis agent...",
+      "variables": ["input_data"],
+      "modelParams": {
+        "model": "gpt-4o",
+        "temperature": 0.2
+      }
+    },
+    {
+      "name": "SummaryAgent",
+      "prompt": "Summarize the following information...",
+      "variables": ["analysis_result"],
+      "modelParams": {
+        "model": "gpt-3.5-turbo",
+        "temperature": 0.7
+      }
+    }
+  ],
+  "connections": [
+    {"from": "AnalysisAgent", "to": "SummaryAgent"}
+  ]
+}
+
+
+## Features
+
+- Auto-instrumented tracing for LLM calls
+- Local development mode for offline trace inspection
+- Customizable trace and span naming
+- Token usage tracking
+- Experimental prompt playground
+- Maintain the prompt versions
+
+## Security & Local Storage
+
+- All data stored locally inside the SDK
+- No data uploaded or tracked externally
+- Prompts versions stored locally in `.agensight` file
+- Recommended: Run in isolated virtual environments
+
+## Contributing
+
+Open source contributions are welcome. Open an issue or submit a PR via GitHub.
+
+### Development Workflow
+
+1. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. Install the package in development mode:
+   ```bash
+   pip install -e .
+   ```
+
+### Development Guidelines
+
+- Follow PEP 8 for Python code
+- Use snake_case for Python functions and variables
+- Use PascalCase for component names in React/TypeScript
+- Add type annotations to all Python functions
+- Follow Conventional Commits for commit messages
+
+## Roadmap
+
+- JavaScript SDK
+- Cloud viewer
+
+## License
+
+MIT License • © 2025 agensight contributors

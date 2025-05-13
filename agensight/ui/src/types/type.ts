@@ -47,6 +47,8 @@ export interface Span {
 
 export interface TraceDetailPageProps {
   id: string;
+  name: string;
+  latency: string;
   router: any;
 }
 
