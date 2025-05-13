@@ -6,7 +6,7 @@ from agensight.tracing.decorators import trace, span
 # Init tracing and Claude instrumentation
 agensight.init(name="claude-chatbot")
 
-client = Anthropic(api_key="") # your anthropic key
+client = Anthropic(api_key=os.getenv("CLAUDE_API_KEY"))# your anthropic key
 
 # Tool implementations
 def get_weather(location: str) -> str:
