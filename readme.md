@@ -1,11 +1,12 @@
 # Agensight
 
-**Open Source Exprerimentation Studio for Conversational AI Agents**
-Pype AI's Agensigh is an open-source experimentation studio built specially for conversational AI agents or customer facing agents. It is similar to LangGraph but supports any agentic framework (including Autogen, LangGraph, and OpenAI Agents SDK) or modality (voicem image, text). With minimal code changes, Pype AI provides complete observability to help you trace agentic workflows for entire sessions or user conversations.
+**<p>Open Source Exprerimentation Studio for Conversational AI Agents</p>**
 
-It features a plug & play playground for editing prompts and tools. It uses an MCP server that if used via cursor or whindsurf can explore your code and generate a playground synced to your code. You can do any edits to your prompts or tools in this playground. Changes made in the playground sync directly to your code, allowing you to effortlessly run, replay, and evaluate experiments.
+Pype AI's Agensight is an open-source experimentation studio built for conversational AI agents. It is similar to LangGraph but supports any agentic framework (likes of Autogen, LangGraph etc) or modality (voice, image & text). With minimal code changes, Pype AI provides complete observability to help you trace agentic workflows for entire sessions or user conversations.
 
-It provides Conversational Replays that help you visit any session, replay the conversation with any multiple versions of the agents (created by editing the agents (model, prompt, rag, tools) and Evaluate to help you improve your customer interactions.
+> It features a plug & play playground for editing prompts and tools. It uses an MCP server that if used via cursor or whindsurf can explore your code and generate a playground synced to your code. You can do any edits to your prompts or tools in this playground. Changes made in the playground sync directly to your code, allowing you to effortlessly run, replay, and evaluate experiments.
+
+> It provides Conversational Replays that help you visit any session, replay the conversation with any multiple versions of the agents (created by editing the agents (model, prompt, rag, tools) and Evaluate to help you improve your customer interactions.
 
 `Agensight` empowers you to quickly iterate, build evaluations, and improve agent conversations.
 
