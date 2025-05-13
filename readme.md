@@ -78,16 +78,17 @@ if __name__ == "__main__":
 To set up the agent playground, we provide an MCP server that, when integrated with Cursor or Windsurf, visually maps your agent workflows. It explores your codebase using Cursor or Windsurf and generates an editable agent workflow configuration (JSON file). You can then visualize your agent workflows in the studio by simply running `agensight view` in your terminal.
 
 ```bash
+# One time setup for agensight MCP
 # Clone the repository
-git clone git@github.com:PYPE-AI-MAIN/agensight_mcp_server.git
-cd agensight_mcp_server
+git clone git@github.com:PYPE-AI-MAIN/agensight_mcpserver.git
+cd agensight_mcpserver
 
 # Create a virtual environment
 python -m venv mcp-env
 source mcp-env/bin/activate  # On Windows: mcp-env\Scripts\activate
 
 # Install dependencies
-pip install mcp-server
+pip install requirements.txt
 ```
 
 ### MCP Server Configuration (for Claude/Cursor)
@@ -96,9 +97,9 @@ pip install mcp-server
 {
   "mcpServers": {
     "sqlite-server": {
-      "command": "/path/to/agensight_mcp_server/your-env/bin/python",
+      "command": "/path/to/agensight_mcpserver/your-env/bin/python",
       "args": [
-        "/path/to/agensight_mcp_server/server.py"
+        "/path/to/agensight_mcpserver/server.py"
       ],
       "description": "tool to generate agensight config"
     }
