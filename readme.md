@@ -1,15 +1,18 @@
-# agensight
+# Agensight
 
-**Observability SDK for LLM workflows — trace, debug, and optimize your prompts.**
+**Open Source Exprerimentation Studio for Conversational AI Agents**
+Pype AI's Agensigh is an open-source experimentation studio built specially for conversational AI agents or customer facing agents. It is similar to LangGraph but supports any agentic framework (including Autogen, LangGraph, and OpenAI Agents SDK) or modality (voicem image, text). With minimal code changes, Pype AI provides complete observability to help you trace agentic workflows for entire sessions or user conversations.
 
-`agensight` provides monitoring and debugging tools for large language model (LLM) interactions during development. It captures structured traces, supports local inspection, and offers a plug-and-play experience with minimal configuration.
+It features a plug & play playground for editing prompts and tools. It uses an MCP server that if used via cursor or whindsurf can explore your code and generate a playground synced to your code. You can do any edits to your prompts or tools in this playground. Changes made in the playground sync directly to your code, allowing you to effortlessly run, replay, and evaluate experiments.
 
-- Python SDK (JavaScript coming soon)
-- Traces every LLM call with context
-- Built-in local prompt playground
-- Developer-first observability for OpenAI & other LLM providers
+It provides Conversational Replays that help you visit any session, replay the conversation with any multiple versions of the agents (created by editing the agents (model, prompt, rag, tools) and Evaluate to help you improve your customer interactions.
 
-## Installation
+`Agensight` empowers you to quickly iterate, build evaluations, and improve agent conversations.
+
+## gif
+
+
+## Quick Start
 
 Requires Python ≥3.10
 
@@ -27,7 +30,10 @@ Your dashboard will open at localhost:5001.
 
 
 
-## Traces Setup
+## Agent Observability Setup
+
+<A line about traces and spans>
+<A picture of the session view>
 
 ```python
 from agensight import init, trace, span
@@ -51,14 +57,13 @@ if __name__ == "__main__":
 ```
 
 
-
-
-
 ## Playground Setup
+
+To set up the agent playground, we provide an MCP server that, when integrated with Cursor or Windsurf, visually maps your agent workflows. It explores your codebase using Cursor or Windsurf and generates an editable agent workflow configuration (JSON file). You can then visualize your agent workflows in the studio by simply running `agensight view` in your terminal.
 
 ```bash
 # Clone the repository
-git clone git@github.com:PYPE-AI-MAIN/agensight_mcpserver.git
+git clone git@github.com:PYPE-AI-MAIN/agensight_mcp_server.git
 cd agensight_mcp_server
 
 # Create a virtual environment
@@ -66,7 +71,7 @@ python -m venv mcp-env
 source mcp-env/bin/activate  # On Windows: mcp-env\Scripts\activate
 
 # Install dependencies
-pip install -r requirements.txt
+pip install mcp-server
 ```
 
 ### MCP Server Configuration (for Claude/Cursor)
