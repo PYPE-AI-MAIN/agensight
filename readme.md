@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
 ```bash
 # Clone the repository
-git clone git@github.com:PYPE-AI-MAIN/agensight_mcp_server.git
+git clone git@github.com:PYPE-AI-MAIN/agensight_mcpserver.git
 cd agensight_mcp_server
 
 # Create a virtual environment
@@ -66,7 +66,7 @@ python -m venv mcp-env
 source mcp-env/bin/activate  # On Windows: mcp-env\Scripts\activate
 
 # Install dependencies
-pip install mcp-server
+pip install -r requirements.txt
 ```
 
 ### MCP Server Configuration (for Claude/Cursor)
