@@ -16,14 +16,11 @@ trace_bp = Blueprint('trace', __name__)
 logger = logging.getLogger(__name__)
 
 
-
-
 @trace_router.get("/traces")
 def list_traces():
     try:
         conn = get_db()
         rows = conn.execute("SELECT * FROM traces ORDER BY started_at DESC").fetchall()
-        print(rows) 
         return [dict(row) for row in rows]
     except sqlite3.DatabaseError as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -70,4 +67,3 @@ def get_structured_trace(trace_id: str):
         return JSONResponse(content=structured)
     except sqlite3.DatabaseError as e:
         raise HTTPException(status_code=500, detail=str(e))
-
