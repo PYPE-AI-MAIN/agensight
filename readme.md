@@ -112,7 +112,7 @@ In your Cursor chatbot, enter:
 Please analyze this codebase using the generateAgensightConfig MCP tool
 ```
 
-## ![pype_logo](./assets/pype_logo.png) Configuration
+## Configuration
 
 ### Trace Configuration
 
@@ -160,7 +160,7 @@ Agensight uses a configuration file (`agensight.config.json` by default) to defi
 
 
 
-## ![pype_logo](./assets/pype_logo.png) Contributing
+## Contributing
 
 Open source contributions are welcome. Open an issue or submit a PR via GitHub.
 
@@ -185,11 +185,11 @@ Open source contributions are welcome. Open an issue or submit a PR via GitHub.
 - Add type annotations to all Python functions
 - Follow Conventional Commits for commit messages
 
-## ![pype_logo](./assets/pype_logo.png) Roadmap
+## Roadmap
 
 - JavaScript SDK
 - Cloud viewer
 
-## ![pype_logo](./assets/pype_logo.png) License
+## License
 
 MIT License • © 2025 agensight contributors
