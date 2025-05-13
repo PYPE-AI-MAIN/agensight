@@ -171,7 +171,11 @@ export function AgentInfo({
           return;
         }
         
-
+        // Log what we're actually sending to help debug
+        console.log('Updating agent with data:', {
+          agent: updatedAgent,
+          config_version: configVersion
+        });
         
         // Use the API service to update the agent
         const result:any = await updateAgent({
@@ -255,21 +259,21 @@ export function AgentInfo({
                 <TabsList className="p-1 h-10 bg-transparent space-x-6 border-0">
                   <TabsTrigger 
                     value="prompt" 
-                    className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
+                    className="text-sm font-medium px-3 py-3 rounded-md border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:bg-muted/40 transition-all duration-200 cursor-pointer hover:text-primary/80 hover:bg-muted/20"
                   >
                     <IconPencil className="w-4 h-4 mr-2" /> 
                     Prompt
                   </TabsTrigger>
                   <TabsTrigger 
                     value="variables" 
-                    className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
+                    className="text-sm font-medium px-3 py-3 rounded-md border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:bg-muted/40 transition-all duration-200 cursor-pointer hover:text-primary/80 hover:bg-muted/20"
                   >
                     <IconCode className="w-4 h-4 mr-2" /> 
                     Variables
                   </TabsTrigger>
                   <TabsTrigger 
                     value="settings" 
-                    className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
+                    className="text-sm font-medium px-3 py-3 rounded-md border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none data-[state=active]:text-primary data-[state=active]:bg-muted/40 transition-all duration-200 cursor-pointer hover:text-primary/80 hover:bg-muted/20"
                   >
                     <IconAdjustments className="w-4 h-4 mr-2" /> 
                     Settings

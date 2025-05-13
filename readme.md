@@ -1,134 +1,94 @@
 # Agensight
 
-**<p>Open Source Exprerimentation Studio for Conversational AI Agents</p>**
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python Version](https://img.shields.io/badge/python-3.7%2B-blue.svg)](https://www.python.org/downloads/)
 
-Pype AI's Agensight is an open-source experimentation studio built for conversational AI agents. It is similar to LangGraph but supports any agentic framework (likes of Autogen, LangGraph etc) or modality (voice, image & text). With minimal code changes, Pype AI provides complete observability to help you trace agentic workflows for entire sessions or user conversations.
-
-> It features a plug & play playground for editing prompts and tools. It uses an MCP server that if used via cursor or whindsurf can explore your code and generate a playground synced to your code. You can do any edits to your prompts or tools in this playground. Changes made in the playground sync directly to your code, allowing you to effortlessly run, replay, and evaluate experiments.
-
-> It provides Conversational Replays that help you visit any session, replay the conversation with any multiple versions of the agents (created by editing the agents (model, prompt, rag, tools) and Evaluate to help you improve your customer interactions.
-
-`Agensight` empowers you to quickly iterate, build evaluations, and improve agent conversations.
-
-## gif
+Agensight is a powerful SDK for visualizing, managing, and debugging AI agents. It provides intuitive tools to monitor agent interactions, manage configurations, and improve the development workflow for AI systems.
 
 ## Features
 
-- Auto-instrumented tracing for LLM calls
-- Local development mode for offline trace inspection
-- Customizable trace and span naming
-- Token usage tracking
-- Experimental prompt playground
-- Maintain the prompt versions
+- **Agent Visualization**: Interactive graph-based visualization of agent interactions and data flow
+- **Configuration Management**: Version control for agent configurations
+- **Prompt Engineering**: Edit and optimize prompts with a built-in editor
+- **Web Dashboard**: Intuitive UI for monitoring and managing your agents
+- **Command Line Interface**: Quickly access your agents from the terminal
 
-## Security & Local Storage
+## Installation
 
-- All data stored locally inside the SDK
-- No data uploaded or tracked externally
-- Prompts versions stored locally in `.agensight` file
-- Recommended: Run in isolated virtual environments
+```bash
+pip install agensight
+```
 
 ## Quick Start
 
-Requires Python ≥3.10
+See the `examples/` folder for usage examples and scripts demonstrating Agensight features.
+
+## Installation (Development)
+
+Install all dependencies from the requirements file:
 
 ```bash
-# Create and activate a virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
-# Install package
-pip install agensight
-agensight view 
+pip install -r requirements.txt
 ```
 
-Your dashboard will open at localhost:5001.
+## Development & Local Setup
 
+To work on Agensight locally, follow these steps:
 
-
-## Agent Observability Setup
-
-<A line about traces and spans>
-<A picture of the session view>
-
-```python
-from agensight import init, trace, span
-import openai
-
-init(name="my-llm-app")  # Optional project name
-
-@trace("plan_generation")
-def main():
-    @span()
-    def call_llm():
-        return openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": "Tell me a joke"}]
-        )
-    response = call_llm()
-    print(response.choices[0].message.content)
-
-if __name__ == "__main__":
-    main()
-```
-
-
-## Playground Setup
-
-To set up the agent playground, we provide an MCP server that, when integrated with Cursor or Windsurf, visually maps your agent workflows. It explores your codebase using Cursor or Windsurf and generates an editable agent workflow configuration (JSON file). You can then visualize your agent workflows in the studio by simply running `agensight view` in your terminal.
-
+### 1. Clone the Repository
 ```bash
-# One time setup for agensight MCP
-# Clone the repository
-git clone git@github.com:PYPE-AI-MAIN/agensight_mcpserver.git
-cd agensight_mcpserver
-
-# Create a virtual environment
-python -m venv mcp-env
-source mcp-env/bin/activate  # On Windows: mcp-env\Scripts\activate
-
-# Install dependencies
-pip install requirements.txt
+git clone https://github.com/yourusername/agensight.git
+cd agensight
 ```
 
-### MCP Server Configuration (for Claude/Cursor)
-
-```json
-{
-  "mcpServers": {
-    "sqlite-server": {
-      "command": "/path/to/agensight_mcpserver/your-env/bin/python",
-      "args": [
-        "/path/to/agensight_mcpserver/server.py"
-      ],
-      "description": "tool to generate agensight config"
-    }
-  }
-}
+### 2. Set Up Python Environment
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
 
-In your Cursor chatbot, enter:
+### 3. Set Up the UI (Frontend)
+```bash
+cd agensight/ui
+npm install
+npm run dev
+```
+This will start the UI on [http://localhost:5173](http://localhost:5173) (or similar).
 
+### 4. Run the Backend (FastAPI server)
+```bash
+cd agensight/server
+uvicorn app:app --reload
 ```
-Please analyze this codebase using the generateAgensightConfig MCP tool
+This will start the backend server on [http://localhost:8000](http://localhost:8000).
+
+### 5. Launch the Dashboard
+```bash
+python3 -m cli.main view
 ```
+
+### 6. Inspecting the Database
+- The backend uses SQLite (default: `agensight/tracing/traces.db`).
+- To inspect the database, use the SQLite CLI:
+  ```bash
+  sqlite3 agensight/tracing/traces.db
+  .tables
+  SELECT * FROM traces LIMIT 5;
+  .exit
+  ```
+- Or use a GUI tool like [DB Browser for SQLite](https://sqlitebrowser.org/).
+
+### 7. Code Style & Linting
+- Python: Use `black` and `flake8` for formatting and linting.
+- TypeScript/JS: Use `eslint` and `prettier` in the `ui/` directory.
+
+### 8. Contributing
+- Please see the [contributing guidelines](./CONTRIBUTING.md) for more details.
 
 ## Configuration
 
-### Trace Configuration
-
-| Feature      | Default            | Customizable With  |
-|--------------|--------------------|--------------------|
-| Project name | `"default"`        | `init(name="...")` |
-| Trace name   | Function name      | `@trace("...")`    |
-| Span name    | Auto (`Agent 1`, etc.) | `@span(name="...")`|
-
-
-### Playground Configuration
-
-Agensight uses a configuration file (`agensight.config.json` by default) to define agents, their connections, and parameters.
-
-#### Basic Structure
+Agensight uses a configuration file to manage agents, connections, and settings:
 
 ```json
 {
@@ -141,56 +101,26 @@ Agensight uses a configuration file (`agensight.config.json` by default) to defi
         "model": "gpt-4o",
         "temperature": 0.2
       }
-    },
-    {
-      "name": "SummaryAgent",
-      "prompt": "Summarize the following information...",
-      "variables": ["analysis_result"],
-      "modelParams": {
-        "model": "gpt-3.5-turbo",
-        "temperature": 0.7
-      }
     }
   ],
   "connections": [
-    {"from": "AnalysisAgent", "to": "SummaryAgent"}
+    {"from": "AnalysisAgent", "to": "OutputAgent"}
   ]
 }
-
 ```
 
+## Documentation
 
+For detailed documentation, please visit our [docs](./docs):
 
-## Contributing
-
-Open source contributions are welcome. Open an issue or submit a PR via GitHub.
-
-### Development Workflow
-
-1. Create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-2. Install the package in development mode:
-   ```bash
-   pip install -e .
-   ```
-
-### Development Guidelines
-
-- Follow PEP 8 for Python code
-- Use snake_case for Python functions and variables
-- Use PascalCase for component names in React/TypeScript
-- Add type annotations to all Python functions
-- Follow Conventional Commits for commit messages
-
-## Roadmap
-
-- JavaScript SDK
-- Cloud viewer
+- [API Reference](./docs/api-reference.md)
+- [Advanced Configuration](./docs/advanced-configuration.md)
+- [Examples](./examples/)
 
 ## License
 
-MIT License • © 2025 agensight contributors
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## Support
+
+For questions, issues or feature requests, please [create an issue](https://github.com/yourusername/agensight/issues).

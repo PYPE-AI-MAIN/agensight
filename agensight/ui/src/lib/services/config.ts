@@ -97,6 +97,8 @@ export async function updateAgent(updateData: {
     }
     
     // Debug log to check exactly what we're sending
+    console.log('In config.ts updateAgent - Sending data:', JSON.stringify(updateData, null, 2));
+    console.log('Config version type:', typeof updateData.config_version);
     
     const response = await fetch(`${API_BASE_URL}/update_agent`, {
       method: 'POST',
@@ -114,6 +116,7 @@ export async function updateAgent(updateData: {
     }
     
     const result = await response.json();
+    console.log('Update agent response:', result);
     return result;
   } catch (error) {
     console.error("Failed to update agent:", error);

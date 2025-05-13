@@ -104,6 +104,7 @@ class DBSpanExporter(SpanExporter):
     def export(self, spans):
         conn = get_db()
         total_tokens_by_trace = defaultdict(int)
+        span_map = {format(span.get_span_context().span_id, "016x"): span for span in spans}
 
         for span in spans:
             ctx = span.get_span_context()
@@ -134,7 +135,7 @@ class DBSpanExporter(SpanExporter):
                         str(span.kind), str(span.status.status_code), json.dumps(attrs)
                     )
                 )
-            except Exception:
+            except:
                 continue
 
             try:
@@ -152,25 +153,64 @@ class DBSpanExporter(SpanExporter):
                                      ))
                         if c["total_tokens"]:
                             total_tokens_by_trace[trace_id] += int(c["total_tokens"])
-            except Exception:
+            except:
                 pass
 
             try:
+                has_tool_calls = False
                 for i in range(5):
                     name = attrs.get(f"gen_ai.completion.0.tool_calls.{i}.name")
                     if not name:
                         break
+                    has_tool_calls = True
                     args = attrs.get(f"gen_ai.completion.0.tool_calls.{i}.arguments")
-                    conn.execute("INSERT INTO tools (span_id, name, arguments) VALUES (?, ?, ?)",
-                                 (span_id, name, args))
-            except Exception:
+
+                    cursor = conn.execute("SELECT id FROM tools WHERE span_id = ? AND name = ?", (span_id, name))
+                    existing = cursor.fetchone()
+                    if not existing:
+                        conn.execute("INSERT INTO tools (span_id, name, arguments) VALUES (?, ?, ?)",
+                                     (span_id, name, args))
+
+                if has_tool_calls and parent_id and parent_id in span_map:
+                    parent_span = span_map[parent_id]
+                    parent_attrs = dict(parent_span.attributes)
+                    if "llm" in parent_span.name.lower() or "completion" in parent_span.name.lower():
+                        for i in range(5):
+                            name = attrs.get(f"gen_ai.completion.0.tool_calls.{i}.name")
+                            if not name:
+                                break
+                            args = attrs.get(f"gen_ai.completion.0.tool_calls.{i}.arguments")
+                            cursor = conn.execute("SELECT id FROM tools WHERE span_id = ? AND name = ?", (parent_id, name))
+                            existing = cursor.fetchone()
+                            if not existing:
+                                conn.execute("INSERT INTO tools (span_id, name, arguments) VALUES (?, ?, ?)",
+                                             (parent_id, name, args))
+            except:
                 pass
+
+        for span in spans:
+            ctx = span.get_span_context()
+            attrs = dict(span.attributes)
+            span_id = format(ctx.span_id, "016x")
+            trace_id = attrs.get("trace_id") or format(ctx.trace_id, "032x")
+
+            if "openai.chat" in span.name.lower() and span.parent:
+                parent_id = format(span.parent.span_id, "016x")
+                cursor = conn.execute("SELECT name, arguments FROM tools WHERE span_id = ?", (span_id,))
+                tools = cursor.fetchall()
+                for tool in tools:
+                    name, args = tool
+                    cursor = conn.execute("SELECT id FROM tools WHERE span_id = ? AND name = ?", (parent_id, name))
+                    existing = cursor.fetchone()
+                    if not existing:
+                        conn.execute("INSERT INTO tools (span_id, name, arguments) VALUES (?, ?, ?)",
+                                     (parent_id, name, args))
 
         try:
             for trace_id, total in total_tokens_by_trace.items():
                 conn.execute("UPDATE traces SET total_tokens=? WHERE id=?", (total, trace_id))
             conn.commit()
-        except Exception:
+        except:
             pass
 
         return SpanExportResult.SUCCESS
