@@ -10,7 +10,8 @@ Pype AI's Agensight is an open-source experimentation studio built for conversat
 
 `Agensight` empowers you to quickly iterate, build evaluations, and improve agent conversations.
 
-## gif
+![Demo](./docs/assets/agensight_gif.gif)
+
 
 ## Features
 
