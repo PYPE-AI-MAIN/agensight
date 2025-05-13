@@ -19,14 +19,12 @@ current_trace_name = contextvars.ContextVar("current_trace_name", default=None)
 
 
 def trace(name: Optional[str] = None, **default_attributes):
-    """
-    Creates a trace record in the DB. Does not create any spans.
-    """
     def decorator(func: Callable):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             trace_name = name or func.__name__
             trace_id = uuid.uuid4().hex
+
             current_trace_id.set(trace_id)
             current_trace_name.set(trace_name)
 
@@ -116,6 +114,7 @@ def normalize_input_output(
             "prompt_tokens": extra.get("gen_ai.usage.prompt_tokens"),
             "total_tokens": extra.get("llm.usage.total_tokens"),
         })
+
     return result
 
 

@@ -47,7 +47,10 @@ export interface Span {
 
 export interface TraceDetailPageProps {
   id: string;
+  name: string;
+  latency: number;
   router: any;
+  total_tokens: number;
 }
 
 export interface GanttChartProps {

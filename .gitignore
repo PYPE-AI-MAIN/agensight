@@ -6,5 +6,5 @@ node_modules
 log
 build
 agensight/tracing/traces.db
-
+agensight.egg-info
 

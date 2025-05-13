@@ -39,11 +39,7 @@ function usePreventScrollPropagation() {
   }, []);
 }
 
-
-
-
-
-function TraceDetailPage({ id, router }: TraceDetailPageProps) {
+function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPageProps) {
   const [activeTab, setActiveTab] = useState("trace-details");
   const [trace, setTrace] = useState<TraceItem | null>(null);
   const [spans, setSpans] = useState<Span[]>([]);
@@ -52,6 +48,21 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
   const [spanDetailsLoading, setSpanDetailsLoading] = useState<boolean>(false);
   const [selectedTool, setSelectedTool] = useState<ToolCall | null>(null);
   const [selectedGanttSpan, setSelectedGanttSpan] = useState<Span | null>(null);
+
+  // Add a global message handler for iframe resizing
+  useEffect(() => {
+    const handleIframeResize = (msg: MessageEvent) => {
+      if (msg.data && msg.data.type === 'resize-iframe' && msg.data.iframeId) {
+        const iframe = document.getElementById(msg.data.iframeId) as HTMLIFrameElement | null;
+        if (iframe) {
+          iframe.style.height = `${msg.data.height + 30}px`;
+        }
+      }
+    };
+    
+    window.addEventListener('message', handleIframeResize);
+    return () => window.removeEventListener('message', handleIframeResize);
+  }, []);
 
   // Use React Query for the trace data
   const { 
@@ -67,20 +78,19 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
   useEffect(() => {
     if (traceData) {
       try {
-        // Our new format doesn't match the schema, so we'll handle it directly
-        console.log("Received trace data:", traceData);
-        
+        // Our new format doesn't match the schema, so we'll handle it directly        
         // Create a minimal trace object with the fields we have
         setTrace({
-          id: traceData?.agents[0]?.span_id ,
-          name: traceData?.agents[0]?.name,
-          session_id:traceData?.agents[0]?.session_id,
-          duration: traceData?.agents[0]?.duration,
+          id: id as any ,
+          name: name,
+          session_id: "N/A",
+          duration: latency,
           trace_input: traceData.trace_input,
           trace_output: traceData.trace_output,
           metadata: {
-            trace_id: traceData?.agents[0]?.id
-          }
+            trace_id: id as any
+          },
+          total_tokens: total_tokens
         });
         
         // Set spans from the agents data
@@ -116,6 +126,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
     enabled: !!selectedSpan?.span_id && !selectedSpan?.details
   });
   
+
   // Process span details when they change
   useEffect(() => {
     if (spanData) {
@@ -176,6 +187,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
     });
   }, [selectedSpan, activeTab]);
 
+
   const backButton = (
     <Button 
       variant="ghost" 
@@ -196,7 +208,8 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
   );
 
   const formatTime = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleTimeString();
+    const date = new Date(timestamp * 1000);
+    return date.toISOString().replace('T', ' ').replace('Z', '');
   };
 
   const formatDuration = (duration: number) => {
@@ -221,7 +234,10 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                 Name: {trace.name}
               </Badge>
               <Badge variant="outline" className="text-xs" suppressHydrationWarning>
-                Latency: {trace.duration}
+                Latency: {trace.duration}s
+              </Badge>
+              <Badge variant="outline" className="text-xs" suppressHydrationWarning>
+                Total Tokens: {trace.total_tokens}
               </Badge>
             </div>
           )}
@@ -257,7 +273,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                   >
                     <div className="flex items-center gap-2">
                       <IconFile size={18} />
-                      <span>Details</span>
+                      <span>Trace Details</span>
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
                   </TabsTrigger>
@@ -557,6 +573,9 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                               <Badge variant="outline">
                                 ID: {selectedSpan.span_id}
                               </Badge>
+                              <Badge variant="outline">
+                                Total Tokens: {selectedSpan?.details?.completions[0].total_tokens || "N/A"} 
+                              </Badge>
                             </div>
                             <div className="mt-3 text-sm text-muted-foreground flex items-center gap-2">
                               <IconClock size={16} />
@@ -577,7 +596,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                   value="completion" 
                                   className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                                 >
-                                  <span>Span</span>
+                                  <span>Span Details</span>
                                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
                                 </TabsTrigger>
                                 <TabsTrigger 
@@ -591,7 +610,7 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                   value="agent" 
                                   className="px-4 py-2 data-[state=active]:bg-blue-500 dark:data-[state=active]:bg-white/20 data-[state=active]:text-white rounded-md transition-all font-medium"
                                 >
-                                  <span>Agent Info</span>
+                                  <span>Span Info</span>
                                   <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transform scale-x-0 transition-transform data-[state=active]:scale-x-100"></div>
                                 </TabsTrigger>
                               </TabsList>
@@ -624,8 +643,9 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                                   </div>
                                                   <div className="border-t">
                                                     <div>
-                                                      <div className="h-[300px] w-full">
+                                                      <div className="w-full">
                                                         <iframe
+                                                          id={`prompt-${prompt.id || index}`}
                                                           srcDoc={`
                                                             <!DOCTYPE html>
                                                             <html>
@@ -638,16 +658,40 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                                                     font-size: 12px;
                                                                     white-space: pre-wrap;
                                                                     overflow-y: auto;
-                                                                    height: 100%;
                                                                     color:white;
                                                                     box-sizing: border-box;
                                                                   }
+                                                                  html, body {
+                                                                    height: auto;
+                                                                  }
                                                                 </style>
+                                                                <script>
+                                                                  window.onload = function() {
+                                                                    sendHeight();
+                                                                    
+                                                                    // Set up a resize observer to handle dynamic content changes
+                                                                    if (window.ResizeObserver) {
+                                                                      const resizeObserver = new ResizeObserver(() => {
+                                                                        sendHeight();
+                                                                      });
+                                                                      resizeObserver.observe(document.body);
+                                                                    }
+                                                                    
+                                                                    function sendHeight() {
+                                                                      window.parent.postMessage({
+                                                                        type: 'resize-iframe',
+                                                                        iframeId: '${`prompt-${prompt.id || index}`}',
+                                                                        height: document.body.scrollHeight
+                                                                      }, '*');
+                                                                    }
+                                                                  };
+                                                                </script>
                                                               </head>
                                                               <body>${prompt.content.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</body>
                                                             </html>
                                                           `}
-                                                          style={{width: "100%", height: "100%", border: "none"}}
+                                                          style={{width: "100%", border: "none"}}
+                                                          className="min-h-[100px]"
                                                           title="Prompt content"
                                                         />
                                                       </div>
@@ -679,8 +723,9 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                                   </div>
                                                   <div className="border-t">
                                                     <div>
-                                                      <div className="h-[300px] w-full">
+                                                      <div className="w-full">
                                                         <iframe
+                                                          id={`completion-${completion.id || index}`}
                                                           srcDoc={`
                                                             <!DOCTYPE html>
                                                             <html>
@@ -693,16 +738,40 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                                                     font-size: 12px;
                                                                     white-space: pre-wrap;
                                                                     overflow-y: auto;
-                                                                    height: 100%;
-                                                                    box-sizing: border-box;
                                                                     color:white;
+                                                                    box-sizing: border-box;
+                                                                  }
+                                                                  html, body {
+                                                                    height: auto;
                                                                   }
                                                                 </style>
+                                                                <script>
+                                                                  window.onload = function() {
+                                                                    sendHeight();
+                                                                    
+                                                                    // Set up a resize observer to handle dynamic content changes
+                                                                    if (window.ResizeObserver) {
+                                                                      const resizeObserver = new ResizeObserver(() => {
+                                                                        sendHeight();
+                                                                      });
+                                                                      resizeObserver.observe(document.body);
+                                                                    }
+                                                                    
+                                                                    function sendHeight() {
+                                                                      window.parent.postMessage({
+                                                                        type: 'resize-iframe',
+                                                                        iframeId: '${`completion-${completion.id || index}`}',
+                                                                        height: document.body.scrollHeight
+                                                                      }, '*');
+                                                                    }
+                                                                  };
+                                                                </script>
                                                               </head>
                                                               <body>${completion.content.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</body>
                                                             </html>
                                                           `}
-                                                          style={{width: "100%", height: "100%", border: "none"}}
+                                                          style={{width: "100%", border: "none"}}
+                                                          className="min-h-[100px]"
                                                           title="Completion content"
                                                         />
                                                       </div>
@@ -720,8 +789,9 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                               <div className="border rounded-md">
                                                 <div className="border-t">
                                                   <div>
-                                                    <div className="h-[300px] w-full">
+                                                    <div className="w-full">
                                                       <iframe
+                                                        id={`final-completion`}
                                                         srcDoc={`
                                                           <!DOCTYPE html>
                                                           <html>
@@ -734,7 +804,6 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                                                   font-size: 12px;
                                                                   white-space: pre-wrap;
                                                                   overflow-y: auto;
-                                                                  height: 100%;
                                                                   box-sizing: border-box;
                                                                   background-color: #f1f5f9;
                                                                 }
@@ -745,11 +814,33 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                                                   }
                                                                 }
                                                               </style>
+                                                              <script>
+                                                                window.onload = function() {
+                                                                  sendHeight();
+                                                                  
+                                                                  // Set up a resize observer to handle dynamic content changes
+                                                                  if (window.ResizeObserver) {
+                                                                    const resizeObserver = new ResizeObserver(() => {
+                                                                      sendHeight();
+                                                                    });
+                                                                    resizeObserver.observe(document.body);
+                                                                  }
+                                                                  
+                                                                  function sendHeight() {
+                                                                    window.parent.postMessage({
+                                                                      type: 'resize-iframe',
+                                                                      iframeId: '${`final-completion`}',
+                                                                      height: document.body.scrollHeight
+                                                                    }, '*');
+                                                                  }
+                                                                };
+                                                              </script>
                                                             </head>
                                                             <body>${(selectedSpan?.final_completion || "No completion data available.").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</body>
                                                           </html>
                                                         `}
-                                                        style={{width: "100%", height: "100%", border: "none"}}
+                                                        style={{width: "100%", border: "none"}}
+                                                        className="min-h-[100px]"
                                                         title="Final completion content"
                                                       />
                                                     </div>
@@ -769,8 +860,9 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                         <div className="border rounded-md">
                                           <div className="border-t">
                                             <div>
-                                              <div className="h-[300px] w-full">
+                                              <div className="w-full">
                                                 <iframe
+                                                  id={`final-completion`}
                                                   srcDoc={`
                                                     <!DOCTYPE html>
                                                     <html>
@@ -783,7 +875,6 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                                             font-size: 12px;
                                                             white-space: pre-wrap;
                                                             overflow-y: auto;
-                                                            height: 100%;
                                                             box-sizing: border-box;
                                                             background-color: #f1f5f9;
                                                           }
@@ -794,11 +885,33 @@ function TraceDetailPage({ id, router }: TraceDetailPageProps) {
                                                             }
                                                           }
                                                         </style>
+                                                        <script>
+                                                          window.onload = function() {
+                                                            sendHeight();
+                                                            
+                                                            // Set up a resize observer to handle dynamic content changes
+                                                            if (window.ResizeObserver) {
+                                                              const resizeObserver = new ResizeObserver(() => {
+                                                                sendHeight();
+                                                              });
+                                                              resizeObserver.observe(document.body);
+                                                            }
+                                                            
+                                                            function sendHeight() {
+                                                              window.parent.postMessage({
+                                                                type: 'resize-iframe',
+                                                                iframeId: '${`final-completion`}',
+                                                                height: document.body.scrollHeight
+                                                              }, '*');
+                                                            }
+                                                          };
+                                                        </script>
                                                       </head>
                                                       <body>${(selectedSpan?.final_completion || "No completion data available.").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</body>
                                                     </html>
                                                   `}
-                                                  style={{width: "100%", height: "100%", border: "none"}}
+                                                  style={{width: "100%", border: "none"}}
+                                                  className="min-h-[100px]"
                                                   title="Final completion content"
                                                 />
                                               </div>

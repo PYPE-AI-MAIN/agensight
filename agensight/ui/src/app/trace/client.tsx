@@ -9,9 +9,11 @@ export default function TraceClient() {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
   const router = useRouter();
-
+  const name = searchParams.get('name');
+  const latency = searchParams.get('latency');
+  const total_tokens = searchParams.get('total_tokens');
 
   return (
-        <TraceDetailPage id={id as string} router={router}/>
+        <TraceDetailPage id={id as string} total_tokens={Number(total_tokens)} name={name as string} latency={Number(latency)} router={router}/>
   );
 } 

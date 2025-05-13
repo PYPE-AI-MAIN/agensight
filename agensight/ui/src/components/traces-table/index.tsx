@@ -46,13 +46,15 @@ import {
 import { columns } from "./columns";
 
 // The DraggableRow component for sortable tables
-function DraggableRow({ row, onRowClick }: { row: Row<TraceItem>; onRowClick: (id: string | number) => void }) {
+function DraggableRow({ row, onRowClick }: { row: Row<TraceItem>; onRowClick: (id: string | number,name: string,latency: string,total_tokens: string) => void }) {
   const { transform, transition, setNodeRef, isDragging } = useSortable({
     id: row.original.id,
   });
 
+
+  const latency = Number(row.original.ended_at) - Number(row.original.started_at);
   const handleRowClick = () => {
-    onRowClick(row.original.id);
+    onRowClick(row.original.id,row.original.name,latency.toFixed(2).toString(),row.original.total_tokens.toString());
   };
 
   return (
@@ -131,7 +133,7 @@ export function TracesTable({
   const router = useRouter();
 
   // Handle row click with optimizations for smooth navigation
-  const handleRowClick = (traceId: string | number) => {
+  const handleRowClick = (traceId: string | number,name: string,latency: string,total_tokens: string) => {
     // Store current scroll position and filter state in sessionStorage for back navigation
     sessionStorage.setItem('tracesTableScrollPosition', window.scrollY.toString());
     sessionStorage.setItem('tracesTableState', JSON.stringify({
@@ -141,7 +143,7 @@ export function TracesTable({
     }));
     
     // Use shallow routing to avoid full page refresh
-    router.push(`/trace?id=${traceId}`, { scroll: false });
+    router.push(`/trace?id=${traceId}&name=${name}&latency=${latency}&total_tokens=${total_tokens}`, { scroll: false });
   };
 
   // Restore table state from session storage on component mount
