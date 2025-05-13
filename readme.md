@@ -97,7 +97,7 @@ pip install requirements.txt
 {
   "mcpServers": {
     "sqlite-server": {
-      "command": "/path/to/agensight_mcpserver/your-env/bin/python",
+      "command": "/path/to/agensight_mcpserver/mcp-env/bin/python",
       "args": [
         "/path/to/agensight_mcpserver/server.py"
       ],

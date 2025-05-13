@@ -71,17 +71,38 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
         }));
       }
       
-      // Create a mapping of types to colors
-      const typeColors: Record<string, string> = {
-        "default": "#10B981", // Blue default
-        // "User": "#6B7280",    // Gray for user
-        // "Assistant": "#0EA5E9", // Blue for assistant
-        // "Agent": "#8B5CF6",   // Purple for agent
-        // "Analysis": "#10B981", // Green for analysis
-        // "Tool": "#F59E0B",    // Amber for tool calls
-        // "Planner": "#EC4899",  // Pink for planner
-        // "Retrieval": "#EF4444", // Red for retrieval
-        // "Search": "#14B8A6"   // Teal for search
+      // Generate a unique color for each span
+      const spanColors: Record<string, string> = {};
+      
+      // Predefined vibrant colors to cycle through
+      const colorPalette = [
+        "#FF5733", "#33FF57", "#3357FF", "#FF33A8", "#33FFF5",
+        "#FFD133", "#8C33FF", "#FF5733", "#33FFBD", "#FF3333",
+        "#33FF33", "#3333FF", "#FF33FF", "#33FFFF", "#FFFF33"
+      ];
+      
+      // Assign colors to each span - randomly but consistently based on span ID
+      spans.forEach((span, index) => {
+        // Use modulo to cycle through colors for more spans than colors
+        const baseColor = colorPalette[index % colorPalette.length];
+        
+        // Slightly vary the color to make each unique
+        const r = parseInt(baseColor.slice(1, 3), 16);
+        const g = parseInt(baseColor.slice(3, 5), 16);
+        const b = parseInt(baseColor.slice(5, 7), 16);
+        
+        // Apply a slight random variation to ensure uniqueness
+        const variation = Math.floor(Math.random() * 30) - 15;
+        const newR = Math.min(255, Math.max(0, r + variation));
+        const newG = Math.min(255, Math.max(0, g + variation));
+        const newB = Math.min(255, Math.max(0, b + variation));
+        
+        spanColors[span.span_id] = `rgb(${newR}, ${newG}, ${newB})`;
+      });
+      
+      // Function to get color for a specific span
+      const getColorForSpan = (spanId: string): string => {
+        return spanColors[spanId] || "#10B981"; // Default green if not found
       };
       
       return {
@@ -89,7 +110,8 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
         endTime,
         totalDuration,
         timeMarks,
-        typeColors
+        spanColors,
+        getColorForSpan
       };
     }, [spans, trace]);
     
@@ -147,7 +169,7 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
                         <div 
                           className={`absolute h-full rounded-sm hover:h-7 hover:-top-1 transition-all duration-75 cursor-pointer ${isUserFocused ? 'ring-2 ring-primary' : ''}`}
                           style={{
-                            backgroundColor: timelineData.typeColors["User"] || timelineData.typeColors.default,
+                            backgroundColor: timelineData.getColorForSpan(span.span_id),
                             left: `${((span.start_time - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
                             width: `${(span.duration / timelineData.totalDuration) * 100}%`,
                             minWidth: "8px",
@@ -184,7 +206,7 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
                         <div 
                             className={`absolute h-full rounded-sm hover:h-7 hover:-top-1 transition-all duration-75 cursor-pointer ${isAgentFocused ? 'ring-2 ring-primary' : ''}`}
                           style={{
-                            backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors["Assistant"] || timelineData.typeColors.default,
+                            backgroundColor: timelineData.getColorForSpan(span.span_id),
                             left: `${((span.start_time - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
                             width: `${(span.duration / timelineData.totalDuration) * 100}%`,
                             minWidth: "8px",
@@ -209,14 +231,14 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
         {/* Legend section */}
         <div className="flex flex-wrap gap-3 py-2 text-xs border-t border-b mb-3">
           <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors["User"] }}></span>
+            <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.spanColors["User"] }}></span>
             <span className="text-xs">User</span>
           </div>
           
           <div className="border-l h-4 mx-2 border-muted-foreground/30"></div>
           
           <div className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors["Assistant"] }}></span>
+            <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.spanColors["Assistant"] }}></span>
             <span className="text-xs">Assistant</span>
           </div>
           
@@ -224,7 +246,7 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
           {agentSpans.map(span => (
             span.name !== "Assistant" && 
             <div key={`legend-${span.span_id}`} className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors.default }}></span>
+              <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.getColorForSpan(span.span_id) }}></span>
               <span className="text-xs">{span.name}</span>
             </div>
           ))}
@@ -415,9 +437,38 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
         }));
       }
       
-      // Create a mapping of types to colors
-      const typeColors: Record<string, string> = {
-        "default": "#10B981" // Gray for unknown types
+      // Generate a unique color for each span
+      const spanColors: Record<string, string> = {};
+      
+      // Predefined vibrant colors to cycle through
+      const colorPalette = [
+        "#FF5733", "#33FF57", "#3357FF", "#FF33A8", "#33FFF5",
+        "#FFD133", "#8C33FF", "#FF5733", "#33FFBD", "#FF3333",
+        "#33FF33", "#3333FF", "#FF33FF", "#33FFFF", "#FFFF33"
+      ];
+      
+      // Assign colors to each span - randomly but consistently based on span ID
+      spans.forEach((span, index) => {
+        // Use modulo to cycle through colors for more spans than colors
+        const baseColor = colorPalette[index % colorPalette.length];
+        
+        // Slightly vary the color to make each unique
+        const r = parseInt(baseColor.slice(1, 3), 16);
+        const g = parseInt(baseColor.slice(3, 5), 16);
+        const b = parseInt(baseColor.slice(5, 7), 16);
+        
+        // Apply a slight random variation to ensure uniqueness
+        const variation = Math.floor(Math.random() * 30) - 15;
+        const newR = Math.min(255, Math.max(0, r + variation));
+        const newG = Math.min(255, Math.max(0, g + variation));
+        const newB = Math.min(255, Math.max(0, b + variation));
+        
+        spanColors[span.span_id] = `rgb(${newR}, ${newG}, ${newB})`;
+      });
+      
+      // Function to get color for a specific span
+      const getColorForSpan = (spanId: string): string => {
+        return spanColors[spanId] || "#10B981"; // Default green if not found
       };
       
       return {
@@ -425,7 +476,8 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
         endTime,
         totalDuration,
         timeMarks,
-        typeColors
+        spanColors,
+        getColorForSpan
       };
     }, [spans, trace]);
     
@@ -483,7 +535,7 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
                       <div 
                         className={`absolute h-full rounded-sm hover:h-7 hover:-top-1 transition-all duration-75 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
                         style={{
-                          backgroundColor: timelineData.typeColors["User"] || timelineData.typeColors.default,
+                          backgroundColor: timelineData.getColorForSpan(span.span_id),
                           left: `${((span.start_time - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
                           width: `${(span.duration / timelineData.totalDuration) * 100}%`,
                           minWidth: "8px",
@@ -516,7 +568,7 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
                       <div 
                           className={`absolute h-full rounded-sm hover:h-7 hover:-top-1 transition-all duration-75 cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
                         style={{
-                          backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors["Assistant"] || timelineData.typeColors.default,
+                          backgroundColor: timelineData.getColorForSpan(span.span_id),
                           left: `${((span.start_time - timelineData.startTime) / timelineData.totalDuration) * 100}%`,
                           width: `${(span.duration / timelineData.totalDuration) * 100}%`,
                           minWidth: "8px",
@@ -540,7 +592,7 @@ export function GanttChart({ spans, trace }: GanttChartProps) {
           {agentSpans.map(span => (
             span.name !== "Assistant" && 
             <div key={`legend-${span.span_id}`} className="flex items-center gap-1">
-              <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.typeColors[span.name] || timelineData.typeColors.default }}></span>
+              <span className="w-3 h-3 rounded-full block" style={{ backgroundColor: timelineData.getColorForSpan(span.span_id) }}></span>
               <span className="text-xs">{span.name}</span>
             </div>
           ))}

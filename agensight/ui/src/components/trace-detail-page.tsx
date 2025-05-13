@@ -39,10 +39,6 @@ function usePreventScrollPropagation() {
   }, []);
 }
 
-
-
-
-
 function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPageProps) {
   const [activeTab, setActiveTab] = useState("trace-details");
   const [trace, setTrace] = useState<TraceItem | null>(null);
@@ -52,6 +48,21 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
   const [spanDetailsLoading, setSpanDetailsLoading] = useState<boolean>(false);
   const [selectedTool, setSelectedTool] = useState<ToolCall | null>(null);
   const [selectedGanttSpan, setSelectedGanttSpan] = useState<Span | null>(null);
+
+  // Add a global message handler for iframe resizing
+  useEffect(() => {
+    const handleIframeResize = (msg: MessageEvent) => {
+      if (msg.data && msg.data.type === 'resize-iframe' && msg.data.iframeId) {
+        const iframe = document.getElementById(msg.data.iframeId) as HTMLIFrameElement | null;
+        if (iframe) {
+          iframe.style.height = `${msg.data.height + 30}px`;
+        }
+      }
+    };
+    
+    window.addEventListener('message', handleIframeResize);
+    return () => window.removeEventListener('message', handleIframeResize);
+  }, []);
 
   // Use React Query for the trace data
   const { 
@@ -176,6 +187,7 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
     });
   }, [selectedSpan, activeTab]);
 
+
   const backButton = (
     <Button 
       variant="ghost" 
@@ -196,7 +208,8 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
   );
 
   const formatTime = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleTimeString();
+    const date = new Date(timestamp * 1000);
+    return date.toISOString().replace('T', ' ').replace('Z', '');
   };
 
   const formatDuration = (duration: number) => {
@@ -221,7 +234,7 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                 Name: {trace.name}
               </Badge>
               <Badge variant="outline" className="text-xs" suppressHydrationWarning>
-                Latency: {trace.duration}
+                Latency: {trace.duration}s
               </Badge>
               <Badge variant="outline" className="text-xs" suppressHydrationWarning>
                 Total Tokens: {trace.total_tokens}
@@ -630,8 +643,9 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                                                   </div>
                                                   <div className="border-t">
                                                     <div>
-                                                      <div className="h-[300px] w-full">
+                                                      <div className="w-full">
                                                         <iframe
+                                                          id={`prompt-${prompt.id || index}`}
                                                           srcDoc={`
                                                             <!DOCTYPE html>
                                                             <html>
@@ -644,16 +658,40 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                                                                     font-size: 12px;
                                                                     white-space: pre-wrap;
                                                                     overflow-y: auto;
-                                                                    height: 100%;
                                                                     color:white;
                                                                     box-sizing: border-box;
                                                                   }
+                                                                  html, body {
+                                                                    height: auto;
+                                                                  }
                                                                 </style>
+                                                                <script>
+                                                                  window.onload = function() {
+                                                                    sendHeight();
+                                                                    
+                                                                    // Set up a resize observer to handle dynamic content changes
+                                                                    if (window.ResizeObserver) {
+                                                                      const resizeObserver = new ResizeObserver(() => {
+                                                                        sendHeight();
+                                                                      });
+                                                                      resizeObserver.observe(document.body);
+                                                                    }
+                                                                    
+                                                                    function sendHeight() {
+                                                                      window.parent.postMessage({
+                                                                        type: 'resize-iframe',
+                                                                        iframeId: '${`prompt-${prompt.id || index}`}',
+                                                                        height: document.body.scrollHeight
+                                                                      }, '*');
+                                                                    }
+                                                                  };
+                                                                </script>
                                                               </head>
                                                               <body>${prompt.content.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</body>
                                                             </html>
                                                           `}
-                                                          style={{width: "100%", height: "100%", border: "none"}}
+                                                          style={{width: "100%", border: "none"}}
+                                                          className="min-h-[100px]"
                                                           title="Prompt content"
                                                         />
                                                       </div>
@@ -685,8 +723,9 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                                                   </div>
                                                   <div className="border-t">
                                                     <div>
-                                                      <div className="h-[300px] w-full">
+                                                      <div className="w-full">
                                                         <iframe
+                                                          id={`completion-${completion.id || index}`}
                                                           srcDoc={`
                                                             <!DOCTYPE html>
                                                             <html>
@@ -699,16 +738,40 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                                                                     font-size: 12px;
                                                                     white-space: pre-wrap;
                                                                     overflow-y: auto;
-                                                                    height: 100%;
-                                                                    box-sizing: border-box;
                                                                     color:white;
+                                                                    box-sizing: border-box;
+                                                                  }
+                                                                  html, body {
+                                                                    height: auto;
                                                                   }
                                                                 </style>
+                                                                <script>
+                                                                  window.onload = function() {
+                                                                    sendHeight();
+                                                                    
+                                                                    // Set up a resize observer to handle dynamic content changes
+                                                                    if (window.ResizeObserver) {
+                                                                      const resizeObserver = new ResizeObserver(() => {
+                                                                        sendHeight();
+                                                                      });
+                                                                      resizeObserver.observe(document.body);
+                                                                    }
+                                                                    
+                                                                    function sendHeight() {
+                                                                      window.parent.postMessage({
+                                                                        type: 'resize-iframe',
+                                                                        iframeId: '${`completion-${completion.id || index}`}',
+                                                                        height: document.body.scrollHeight
+                                                                      }, '*');
+                                                                    }
+                                                                  };
+                                                                </script>
                                                               </head>
                                                               <body>${completion.content.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</body>
                                                             </html>
                                                           `}
-                                                          style={{width: "100%", height: "100%", border: "none"}}
+                                                          style={{width: "100%", border: "none"}}
+                                                          className="min-h-[100px]"
                                                           title="Completion content"
                                                         />
                                                       </div>
@@ -726,8 +789,9 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                                               <div className="border rounded-md">
                                                 <div className="border-t">
                                                   <div>
-                                                    <div className="h-[300px] w-full">
+                                                    <div className="w-full">
                                                       <iframe
+                                                        id={`final-completion`}
                                                         srcDoc={`
                                                           <!DOCTYPE html>
                                                           <html>
@@ -740,7 +804,6 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                                                                   font-size: 12px;
                                                                   white-space: pre-wrap;
                                                                   overflow-y: auto;
-                                                                  height: 100%;
                                                                   box-sizing: border-box;
                                                                   background-color: #f1f5f9;
                                                                 }
@@ -751,11 +814,33 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                                                                   }
                                                                 }
                                                               </style>
+                                                              <script>
+                                                                window.onload = function() {
+                                                                  sendHeight();
+                                                                  
+                                                                  // Set up a resize observer to handle dynamic content changes
+                                                                  if (window.ResizeObserver) {
+                                                                    const resizeObserver = new ResizeObserver(() => {
+                                                                      sendHeight();
+                                                                    });
+                                                                    resizeObserver.observe(document.body);
+                                                                  }
+                                                                  
+                                                                  function sendHeight() {
+                                                                    window.parent.postMessage({
+                                                                      type: 'resize-iframe',
+                                                                      iframeId: '${`final-completion`}',
+                                                                      height: document.body.scrollHeight
+                                                                    }, '*');
+                                                                  }
+                                                                };
+                                                              </script>
                                                             </head>
                                                             <body>${(selectedSpan?.final_completion || "No completion data available.").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</body>
                                                           </html>
                                                         `}
-                                                        style={{width: "100%", height: "100%", border: "none"}}
+                                                        style={{width: "100%", border: "none"}}
+                                                        className="min-h-[100px]"
                                                         title="Final completion content"
                                                       />
                                                     </div>
@@ -775,8 +860,9 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                                         <div className="border rounded-md">
                                           <div className="border-t">
                                             <div>
-                                              <div className="h-[300px] w-full">
+                                              <div className="w-full">
                                                 <iframe
+                                                  id={`final-completion`}
                                                   srcDoc={`
                                                     <!DOCTYPE html>
                                                     <html>
@@ -789,7 +875,6 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                                                             font-size: 12px;
                                                             white-space: pre-wrap;
                                                             overflow-y: auto;
-                                                            height: 100%;
                                                             box-sizing: border-box;
                                                             background-color: #f1f5f9;
                                                           }
@@ -800,11 +885,33 @@ function TraceDetailPage({ id,name,latency, router ,total_tokens}: TraceDetailPa
                                                             }
                                                           }
                                                         </style>
+                                                        <script>
+                                                          window.onload = function() {
+                                                            sendHeight();
+                                                            
+                                                            // Set up a resize observer to handle dynamic content changes
+                                                            if (window.ResizeObserver) {
+                                                              const resizeObserver = new ResizeObserver(() => {
+                                                                sendHeight();
+                                                              });
+                                                              resizeObserver.observe(document.body);
+                                                            }
+                                                            
+                                                            function sendHeight() {
+                                                              window.parent.postMessage({
+                                                                type: 'resize-iframe',
+                                                                iframeId: '${`final-completion`}',
+                                                                height: document.body.scrollHeight
+                                                              }, '*');
+                                                            }
+                                                          };
+                                                        </script>
                                                       </head>
                                                       <body>${(selectedSpan?.final_completion || "No completion data available.").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</body>
                                                     </html>
                                                   `}
-                                                  style={{width: "100%", height: "100%", border: "none"}}
+                                                  style={{width: "100%", border: "none"}}
+                                                  className="min-h-[100px]"
                                                   title="Final completion content"
                                                 />
                                               </div>

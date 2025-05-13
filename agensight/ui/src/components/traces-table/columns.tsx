@@ -31,12 +31,24 @@ export const columns: ColumnDef<TraceItem>[] = [
     header: "Id",
     cell: ({ row }) => (
       <div className="w-full text-base overflow-hidden text-ellipsis">
-        <div className="truncate">
+        <div className="truncate max-w-[150px]" title={row.original.id.toString()}>
           {row.original.id}
         </div>
       </div>
     ),
-    size: 320,
+    size: 180,
+  },
+  {
+    accessorKey: "created_at",
+    header: "Created At",
+    cell: ({ row }) => (
+      <div className="w-full text-base overflow-hidden text-ellipsis">
+        <div className="truncate">
+          {new Date(row.original.started_at * 1000).toLocaleString()}
+        </div>
+      </div>
+    ),
+    size: 200,
   },
   {
     accessorKey: "name",
@@ -63,7 +75,7 @@ export const columns: ColumnDef<TraceItem>[] = [
         </div>
       );
     },
-    size: 200,
+    size: 120,
   },
   {
     accessorKey: "tokens",
@@ -77,7 +89,7 @@ export const columns: ColumnDef<TraceItem>[] = [
         </div>
       );
     },
-    size: 200,
+    size: 120,
   },
   {
     accessorKey: "metadata",
@@ -85,7 +97,6 @@ export const columns: ColumnDef<TraceItem>[] = [
     cell: ({ row }) => {
       try {
         const metadata = JSON.parse(row.original.metadata);
-        // Only show up to 3 priority fields
         const priorityKeys = ["status", "priority", "user_id"];
         const keysToShow = Object.keys(metadata)
           .filter(key => priorityKeys.includes(key))
@@ -94,7 +105,7 @@ export const columns: ColumnDef<TraceItem>[] = [
         if (keysToShow.length === 0) {
           return (
             <div className="w-full text-sm text-muted-foreground overflow-hidden text-ellipsis px-2">
-              No priority metadata
+              No metadata
             </div>
           );
         }
@@ -118,6 +129,6 @@ export const columns: ColumnDef<TraceItem>[] = [
         );
       }
     },
-    size: 200,
+    size: 220,
   },
 ]; 
